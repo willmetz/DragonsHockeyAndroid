@@ -1,30 +1,33 @@
 package com.slapshotapps.dragonshockey.home.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.di.IoDispatcher
-import com.slapshotapps.dragonshockey.repository.HockeyRepository
+import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterResult
+import com.slapshotapps.dragonshockey.repository.ScheduleRepository
+import com.slapshotapps.dragonshockey.repository.ScheduleResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val hockeyRepository: HockeyRepository,
+class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepository,
+                                        private val scheduleRepository: ScheduleRepository,
                                         @IoDispatcher private val ioDispatcher: CoroutineDispatcher) : ViewModel()
 {
 //    val rosterFlow = hockeyRepository.getRoster()
 
     suspend fun getRoster(): Flow<RosterResult>{
-        hockeyRepository.authenticateUser()
+        rosterRepository.authenticateUser()
 
-        return hockeyRepository.getRoster()
+        return rosterRepository.getRoster()
+    }
+
+    suspend fun getSchedule(): Flow<ScheduleResult>{
+        rosterRepository.authenticateUser()
+
+        return scheduleRepository.getSchedule()
     }
 
 

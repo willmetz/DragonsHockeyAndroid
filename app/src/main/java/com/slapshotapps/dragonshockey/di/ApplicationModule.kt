@@ -5,12 +5,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.database
-import com.slapshotapps.dragonshockey.repository.HockeyRepository
-import com.slapshotapps.dragonshockey.repository.HockeyRepositoryImp
+import com.slapshotapps.dragonshockey.repository.RosterRepository
+import com.slapshotapps.dragonshockey.repository.RosterRepositoryImp
+import com.slapshotapps.dragonshockey.repository.ScheduleRepository
+import com.slapshotapps.dragonshockey.repository.ScheduleRepositoryImp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,10 @@ class ApplicationModule {
     fun provideAuth() = Firebase.auth
 
     @Provides
-    fun providesHockeyRepo(database: FirebaseDatabase, auth: FirebaseAuth) : HockeyRepository = HockeyRepositoryImp(database, auth)
+    fun providesRosterRepo(database: FirebaseDatabase, auth: FirebaseAuth) : RosterRepository = RosterRepositoryImp(database, auth)
+
+    @Provides
+    fun providesScheduleRepo(database: FirebaseDatabase, auth: FirebaseAuth) : ScheduleRepository = ScheduleRepositoryImp(database, auth)
 
     @IoDispatcher
     @Provides

@@ -46,6 +46,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED){
+                viewModel.getSchedule().collect{
+                    println("data is $it")
+                }
+            }
+        }
+
     }
 }
 

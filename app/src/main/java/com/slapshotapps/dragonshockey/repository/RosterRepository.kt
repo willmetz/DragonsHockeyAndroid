@@ -7,11 +7,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
-import com.slapshotapps.dragonshockey.extensions.gson.decodeFromMap
 import com.slapshotapps.dragonshockey.models.Player
 import com.slapshotapps.dragonshockey.network.models.PlayerDTO
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapter
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,8 +16,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
-interface HockeyRepository{
-    //suspend fun getSchedule()
+interface RosterRepository{
     fun getRoster(): Flow<RosterResult>
     suspend fun authenticateUser(): Boolean
 }
@@ -31,7 +27,7 @@ sealed interface RosterResult{
     data object RosterError: RosterResult
 }
 
-class HockeyRepositoryImp @Inject constructor(private val database: FirebaseDatabase, private  val auth: FirebaseAuth) : HockeyRepository{
+class RosterRepositoryImp @Inject constructor(private val database: FirebaseDatabase, private  val auth: FirebaseAuth) : RosterRepository{
 
     private val gson = Gson()
 
