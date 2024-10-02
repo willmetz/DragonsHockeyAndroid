@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.database
+import com.slapshotapps.dragonshockey.repository.AuthenticationManager
+import com.slapshotapps.dragonshockey.repository.AuthenticationManagerImp
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterRepositoryImp
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
@@ -28,10 +30,13 @@ class ApplicationModule {
     fun provideAuth() = Firebase.auth
 
     @Provides
-    fun providesRosterRepo(database: FirebaseDatabase, auth: FirebaseAuth) : RosterRepository = RosterRepositoryImp(database, auth)
+    fun providesAuthManager(auth:FirebaseAuth) : AuthenticationManager = AuthenticationManagerImp(auth)
 
     @Provides
-    fun providesScheduleRepo(database: FirebaseDatabase, auth: FirebaseAuth) : ScheduleRepository = ScheduleRepositoryImp(database, auth)
+    fun providesRosterRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : RosterRepository = RosterRepositoryImp(database, authenticationManager)
+
+    @Provides
+    fun providesScheduleRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : ScheduleRepository = ScheduleRepositoryImp(database, authenticationManager)
 
     @IoDispatcher
     @Provides

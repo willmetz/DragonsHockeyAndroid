@@ -17,8 +17,7 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 
 interface RosterRepository{
-    fun getRoster(): Flow<RosterResult>
-    suspend fun authenticateUser(): Boolean
+    suspend fun getRoster(): Flow<RosterResult>
 }
 
 sealed interface RosterResult{
@@ -27,37 +26,32 @@ sealed interface RosterResult{
     data object RosterError: RosterResult
 }
 
-class RosterRepositoryImp @Inject constructor(private val database: FirebaseDatabase, private  val auth: FirebaseAuth) : RosterRepository{
+class RosterRepositoryImp @Inject constructor(private val database: FirebaseDatabase, private  val authenticationManager: AuthenticationManager) : RosterRepository{
 
     private val gson = Gson()
 
-    override suspend fun authenticateUser() = suspendCancellableCoroutine { cont ->
-        if(auth.currentUser != null){
-            cont.isActive.takeIf { true }?.run { cont.resume(true) }
-        }else{
-            auth.signInAnonymously().addOnCompleteListener {
-                cont.isActive.takeIf { true }?.run { cont.resume(it.isSuccessful) }
+    override suspend fun getRoster(): Flow<RosterResult>{
+
+        authenticationManager.authenticateUserAnonymously()
+
+        return callbackFlow {
+            val postListener = object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    this@callbackFlow.trySend(RosterResult.RosterError)
+                }
+
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    dataSnapshot.toList<PlayerDTO>(gson).takeIf { it.isNotEmpty() }?.apply {
+                        this@callbackFlow.trySend(RosterResult.HasRoster(toRoster(this)))
+                    }?: this@callbackFlow.trySend(RosterResult.NoRoster)
+                }
             }
-        }
-    }
 
-    override fun getRoster() = callbackFlow {
-        val postListener = object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-                this@callbackFlow.trySend(RosterResult.RosterError)
+            database.getReference("roster").addValueEventListener(postListener)
+
+            awaitClose{
+                database.getReference("roster").removeEventListener(postListener)
             }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                dataSnapshot.toList<PlayerDTO>(gson).takeIf { it.isNotEmpty() }?.apply {
-                    this@callbackFlow.trySend(RosterResult.HasRoster(toRoster(this)))
-                }?: this@callbackFlow.trySend(RosterResult.NoRoster)
-            }
-        }
-
-        database.getReference("roster").addValueEventListener(postListener)
-
-        awaitClose{
-            database.getReference("roster").removeEventListener(postListener)
         }
     }
 

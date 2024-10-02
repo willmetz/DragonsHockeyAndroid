@@ -24,28 +24,33 @@ sealed interface ScheduleResult{
     data class HasSchedule(val seasonSchedule: List<Game>) : ScheduleResult
 }
 
-class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val auth: FirebaseAuth) : ScheduleRepository{
+class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val auth: AuthenticationManager) : ScheduleRepository{
 
     private val gson = Gson()
     private val gameTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-    override fun getSchedule() = callbackFlow {
-        val postListener = object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-                this@callbackFlow.trySend(ScheduleResult.NoScheduleAvailable)
+    override fun getSchedule() : Flow<ScheduleResult> {
+
+        return callbackFlow {
+            auth.authenticateUserAnonymously()
+
+            val postListener = object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    this@callbackFlow.trySend(ScheduleResult.NoScheduleAvailable)
+                }
+
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    dataSnapshot.toList<GameDTO>(gson).takeIf { it.isNotEmpty() }?.apply {
+                        this@callbackFlow.trySend(ScheduleResult.HasSchedule(toSchedule(this)))
+                    } ?: this@callbackFlow.trySend(ScheduleResult.NoScheduleAvailable)
+                }
             }
 
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                dataSnapshot.toList<GameDTO>(gson).takeIf { it.isNotEmpty() }?.apply {
-                    this@callbackFlow.trySend(ScheduleResult.HasSchedule(toSchedule(this)))
-                } ?: this@callbackFlow.trySend(ScheduleResult.NoScheduleAvailable)
+            database.getReference("games").addValueEventListener(postListener)
+
+            awaitClose {
+                database.getReference("games").removeEventListener(postListener)
             }
-        }
-
-        database.getReference("games").addValueEventListener(postListener)
-
-        awaitClose {
-            database.getReference("games").removeEventListener(postListener)
         }
     }
 
@@ -57,7 +62,7 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val
             gameDto?.opponent ?: "Unknown",
             gameDto?.rink.orEmpty()
         )
-    }
+    }.sortedBy { it.gameTime }
 
     private fun getGameTime(timeStamp: String) = kotlin.runCatching {
         LocalDateTime.parse(timeStamp, gameTimeFormat)

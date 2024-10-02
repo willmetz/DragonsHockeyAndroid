@@ -16,6 +16,7 @@ import com.slapshotapps.dragonshockey.ui.theme.Typography
 
 sealed interface PreviousGameResult{
     data object UpdatePending : PreviousGameResult
+    data object NoResult: PreviousGameResult
     data class Win(val teamName: String, val teamScore: String, val opponentName: String, val opponentScore: String) : PreviousGameResult
     data class Loss(val teamName: String, val teamScore: String, val opponentName: String, val opponentScore: String) : PreviousGameResult
     data class Tie(val teamName: String, val teamScore: String, val opponentName: String, val opponentScore: String) : PreviousGameResult
@@ -39,6 +40,7 @@ private fun GameResultWidget(result: PreviousGameResult, modifier: Modifier = Mo
         is PreviousGameResult.Tie -> GameResult(result.teamName, result.teamScore, result.opponentName, result.opponentScore, "T", modifier)
         is PreviousGameResult.Win -> GameResult(result.teamName, result.teamScore, result.opponentName, result.opponentScore, "W", modifier)
         PreviousGameResult.UpdatePending -> PendingGameResult(modifier)
+        PreviousGameResult.NoResult -> Unit
     }
 }
 

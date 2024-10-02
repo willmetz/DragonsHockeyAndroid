@@ -40,20 +40,11 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED){
-                viewModel.getRoster().collect{
+                viewModel.homeScreenState.collect{
                     println("data is $it")
                 }
             }
         }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED){
-                viewModel.getSchedule().collect{
-                    println("data is $it")
-                }
-            }
-        }
-
     }
 }
 
