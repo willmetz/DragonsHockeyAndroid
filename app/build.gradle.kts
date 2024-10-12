@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.moshi)
     implementation(libs.gson)
+    implementation(libs.compose.coil)
+    implementation(libs.androidx.compose.runtime)
 
 
     testImplementation(libs.junit)
