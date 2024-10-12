@@ -7,6 +7,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.database
 import com.slapshotapps.dragonshockey.repository.AuthenticationManager
 import com.slapshotapps.dragonshockey.repository.AuthenticationManagerImp
+import com.slapshotapps.dragonshockey.repository.GameResultRepository
+import com.slapshotapps.dragonshockey.repository.GameResultRepositoryImp
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterRepositoryImp
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
@@ -37,6 +39,9 @@ class ApplicationModule {
 
     @Provides
     fun providesScheduleRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : ScheduleRepository = ScheduleRepositoryImp(database, authenticationManager)
+
+    @Provides
+    fun providesGameResultRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : GameResultRepository = GameResultRepositoryImp(database, authenticationManager)
 
     @IoDispatcher
     @Provides

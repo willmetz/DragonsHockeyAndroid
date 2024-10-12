@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.models.Game
+import com.slapshotapps.dragonshockey.repository.GameResultRepository
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleResult
+import com.slapshotapps.dragonshockey.repository.SeasonRecordResult
 import com.slapshotapps.dragonshockey.widgets.NextGame
 import com.slapshotapps.dragonshockey.widgets.PreviousGameResult
 import com.slapshotapps.dragonshockey.widgets.SeasonRecord
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.zip
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -33,13 +36,14 @@ sealed interface HomeScreenState{
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepository,
                                         private val scheduleRepository: ScheduleRepository,
+                                        private val gameResultRepository: GameResultRepository,
                                         @IoDispatcher private val ioDispatcher: CoroutineDispatcher) : ViewModel()
 {
     val homeScreenState : StateFlow<HomeScreenState> =
-        scheduleRepository.getSchedule().map { scheduleResult ->
-            val record = SeasonRecord("0", "0", "0", "0")
+        scheduleRepository.getSchedule().zip(gameResultRepository.getSeasonRecord()) { scheduleResult, gameResult ->
 
-            HomeScreenState.DataReady(record, PreviousGameResult.NoResult, getNextGame(scheduleResult))
+
+            HomeScreenState.DataReady(getSeasonRecord(gameResult), PreviousGameResult.NoResult, getNextGame(scheduleResult))
         }.stateIn(scope = viewModelScope, started = SharingStarted.Lazily, initialValue = HomeScreenState.Loading)
 
 
@@ -53,6 +57,15 @@ class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepo
                 } ?: NextGame.NoMoreGames("Wait Till Next Season")
             }
             ScheduleResult.NoScheduleAvailable -> NextGame.NoMoreGames("Wait Till Next Season")
+        }
+    }
+
+    private fun getSeasonRecord(seasonRecord: SeasonRecordResult): SeasonRecord{
+        return when(seasonRecord){
+            is SeasonRecordResult.SeasonRecord -> SeasonRecord(seasonRecord.wins.toString(),
+                seasonRecord.losses.toString(),
+                seasonRecord.overtimeLosses.toString(),
+                seasonRecord.ties.toString(),)
         }
     }
 

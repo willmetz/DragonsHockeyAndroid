@@ -28,6 +28,7 @@ import com.slapshotapps.dragonshockey.home.viewmodel.HomeScreenState
 import com.slapshotapps.dragonshockey.home.viewmodel.HomeViewModel
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
 import com.slapshotapps.dragonshockey.widgets.NextGameWidget
+import com.slapshotapps.dragonshockey.widgets.SeasonRecordWidget
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
@@ -76,8 +77,9 @@ fun HomeScreen(homeScreenState: StateFlow<HomeScreenState>, modifier: Modifier =
 @Composable
 fun HomeScreenContent(uiState: HomeScreenState.DataReady, modifier: Modifier = Modifier){
     Column(modifier.then(Modifier.fillMaxSize())) {
-        ShowTeamLogo(Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
+        ShowTeamLogo(Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp))
 
+        SeasonRecordWidget(uiState.record, Modifier.width(160.dp).align(Alignment.CenterHorizontally).padding(bottom = 16.dp))
         NextGameWidget("Next Game", uiState.nextGame, Modifier.align(Alignment.CenterHorizontally))
     }
 }
