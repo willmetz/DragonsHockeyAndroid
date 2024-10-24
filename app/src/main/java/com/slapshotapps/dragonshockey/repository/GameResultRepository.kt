@@ -24,6 +24,11 @@ sealed interface SeasonRecordResult{
     data class SeasonRecord(val wins: Int, val losses: Int, val ties: Int, val overtimeLosses: Int) : SeasonRecordResult
 }
 
+sealed interface GameResults{
+    data object NoResults : GameResults
+    //data class HasResults( val results: )
+}
+
 class GameResultRepositoryImp(private val database: FirebaseDatabase, private  val auth: AuthenticationManager) : GameResultRepository{
 
     private val gson = Gson()
@@ -51,6 +56,8 @@ class GameResultRepositoryImp(private val database: FirebaseDatabase, private  v
             }
         }
     }
+
+    //fun getAllGameResults(): Flow<>
 
     private fun getSeasonRecord(gameResults: List<GameResultDTO?>) = run {
         val wins = gameResults.count { (it?.teamScore ?: 0) > (it?.opponentScore ?: 0) }

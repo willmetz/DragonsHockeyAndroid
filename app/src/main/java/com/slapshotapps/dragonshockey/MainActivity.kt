@@ -28,6 +28,8 @@ import com.slapshotapps.dragonshockey.home.viewmodel.HomeScreenState
 import com.slapshotapps.dragonshockey.home.viewmodel.HomeViewModel
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
 import com.slapshotapps.dragonshockey.widgets.NextGameWidget
+import com.slapshotapps.dragonshockey.widgets.PreviousGameResult
+import com.slapshotapps.dragonshockey.widgets.PreviousGameResultWidget
 import com.slapshotapps.dragonshockey.widgets.SeasonRecordWidget
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,6 +82,11 @@ fun HomeScreenContent(uiState: HomeScreenState.DataReady, modifier: Modifier = M
         ShowTeamLogo(Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp))
 
         SeasonRecordWidget(uiState.record, Modifier.width(160.dp).align(Alignment.CenterHorizontally).padding(bottom = 16.dp))
+
+        if(uiState.lastGameResult !is PreviousGameResult.NoResult){
+            PreviousGameResultWidget("Last Game", uiState.lastGameResult, Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp))
+        }
+
         NextGameWidget("Next Game", uiState.nextGame, Modifier.align(Alignment.CenterHorizontally))
     }
 }

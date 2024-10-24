@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.models.Game
+import com.slapshotapps.dragonshockey.models.GameResultData
 import com.slapshotapps.dragonshockey.repository.GameResultRepository
+import com.slapshotapps.dragonshockey.repository.GameResults
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleResult
@@ -43,7 +45,7 @@ class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepo
         scheduleRepository.getSchedule().zip(gameResultRepository.getSeasonRecord()) { scheduleResult, gameResult ->
 
 
-            HomeScreenState.DataReady(getSeasonRecord(gameResult), PreviousGameResult.NoResult, getNextGame(scheduleResult))
+            HomeScreenState.DataReady(getSeasonRecord(gameResult), getLastGameResult(scheduleResult), getNextGame(scheduleResult))
         }.stateIn(scope = viewModelScope, started = SharingStarted.Lazily, initialValue = HomeScreenState.Loading)
 
 
@@ -58,6 +60,34 @@ class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepo
             }
             ScheduleResult.NoScheduleAvailable -> NextGame.NoMoreGames("Wait Till Next Season")
         }
+    }
+
+    private fun getLastGameResult(scheduleResult: ScheduleResult) : PreviousGameResult {
+        return when(scheduleResult) {
+            ScheduleResult.NoScheduleAvailable -> PreviousGameResult.NoResult
+            is ScheduleResult.HasSchedule -> getLastGameResultFromGames(scheduleResult.seasonSchedule)
+        }
+    }
+
+    private fun getLastGameResultFromGames(games: List<Game>) : PreviousGameResult{
+        return games.sortedBy { it.gameTime }.indexOfLast { it.gameTime?.isBefore(LocalDateTime.now()) == true }.takeIf { it > -1 }?.let {
+
+            val opponentName = games.getOrNull(it)?.opponentName ?: "Unknown"
+            val teamName = "Dragons"
+
+            when(val result = games.getOrNull(it)?.result){
+                is GameResultData.Loss ->
+                    PreviousGameResult.Loss(teamName, result.teamScore.toString(), opponentName, result.opponentScore.toString() )
+                is GameResultData.OTL ->
+                    PreviousGameResult.OvertimeLoss(teamName, result.teamScore.toString(), opponentName, result.opponentScore.toString() )
+                is GameResultData.Tie ->
+                    PreviousGameResult.Tie(teamName, result.teamScore.toString(), opponentName, result.opponentScore.toString() )
+                GameResultData.UnknownResult -> PreviousGameResult.UpdatePending
+                is GameResultData.Win ->
+                    PreviousGameResult.Win(teamName, result.teamScore.toString(), opponentName, result.opponentScore.toString() )
+                null -> PreviousGameResult.NoResult
+            }
+        } ?: PreviousGameResult.NoResult
     }
 
     private fun getSeasonRecord(seasonRecord: SeasonRecordResult): SeasonRecord{
