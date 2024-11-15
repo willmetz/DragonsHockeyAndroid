@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.firebase)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.serializable)
 }
 
 android {
@@ -59,10 +60,14 @@ android {
 
 dependencies {
 
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material)
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -75,7 +80,11 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.gson)
     implementation(libs.compose.coil)
-    implementation(libs.androidx.compose.runtime)
+
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.google.hilt.nav)
+
+    implementation(libs.serialization)
 
 
     testImplementation(libs.junit)

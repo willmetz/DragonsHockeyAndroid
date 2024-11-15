@@ -17,7 +17,7 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 
 interface RosterRepository{
-    suspend fun getRoster(): Flow<RosterResult>
+    fun getRoster(): Flow<RosterResult>
 }
 
 sealed interface RosterResult{
@@ -30,11 +30,11 @@ class RosterRepositoryImp @Inject constructor(private val database: FirebaseData
 
     private val gson = Gson()
 
-    override suspend fun getRoster(): Flow<RosterResult>{
-
-        authenticationManager.authenticateUserAnonymously()
+    override fun getRoster(): Flow<RosterResult>{
 
         return callbackFlow {
+            authenticationManager.authenticateUserAnonymously()
+
             val postListener = object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
                     this@callbackFlow.trySend(RosterResult.RosterError)

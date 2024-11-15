@@ -4,108 +4,117 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.slapshotapps.dragonshockey.home.viewmodel.HomeScreenState
-import com.slapshotapps.dragonshockey.home.viewmodel.HomeViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.slapshotapps.dragonshockey.home.screen.HomeScreen
+import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
+import com.slapshotapps.dragonshockey.roster.RosterScreen
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
-import com.slapshotapps.dragonshockey.widgets.NextGameWidget
-import com.slapshotapps.dragonshockey.widgets.PreviousGameResult
-import com.slapshotapps.dragonshockey.widgets.PreviousGameResultWidget
-import com.slapshotapps.dragonshockey.widgets.SeasonRecordWidget
-import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+
+@Serializable
+object Home
+@Serializable
+object Stats
+@Serializable
+object Roster
+@Serializable
+object Schedule
+@Serializable
+object Settings
+
+
+val bottomNavRoutes = listOf(
+    TopLevelRoutes("Home", Home, Icons.Filled.Home),
+    TopLevelRoutes("Stats", Stats, Icons.Filled.Build),
+    TopLevelRoutes("Roster", Roster, Icons.Filled.Person),
+    TopLevelRoutes("Schedule", Schedule, Icons.Filled.DateRange),
+    TopLevelRoutes("Settings", Settings, Icons.Filled.Settings)
+)
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    private val viewModel : HomeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             DragonsHockeyRefreshTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeScreen(viewModel.homeScreenState, Modifier.padding(innerPadding))
+                val navController = rememberNavController()
+                Scaffold(
+                    bottomBar = {
+                        BottomBarComponent(navController)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    NavHost(navController, startDestination = Home, Modifier.padding(innerPadding)){
+
+                        composable<Home> { HomeScreen() }
+                        composable<Roster> { RosterScreen() }
+                    }
                 }
             }
         }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED){
-                viewModel.homeScreenState.collect{
-                    println("data is $it")
-                }
+    }
+
+    @Composable
+    private fun BottomBarComponent(navController: NavHostController) {
+        BottomNavigation() {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            bottomNavRoutes.forEach { topLevelRoute ->
+                BottomNavigationItem(
+                    icon = {
+                        Icon(
+                            topLevelRoute.icon,
+                            contentDescription = topLevelRoute.name
+                        )
+                    },
+                    label = { Text(topLevelRoute.name) },
+                    selected = currentDestination?.route == topLevelRoute.name,
+                    onClick = {
+                        navController.navigate(topLevelRoute.route) {
+                            // Pop up to the start destination of the graph to
+                            // avoid building up a large stack of destinations
+                            // on the back stack as users select items
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            // Avoid multiple copies of the same destination when
+                            // reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
+                        }
+                    }
+                )
             }
         }
     }
 }
 
-@Composable
-fun HomeScreen(homeScreenState: StateFlow<HomeScreenState>, modifier: Modifier = Modifier){
-
-    val uiState = homeScreenState.collectAsStateWithLifecycle()
-
-    when(val data = uiState.value){
-        is HomeScreenState.DataReady -> HomeScreenContent(data)
-        HomeScreenState.Loading -> ShowLoading()
-    }
 
 
-
-
-}
-
-@Composable
-fun HomeScreenContent(uiState: HomeScreenState.DataReady, modifier: Modifier = Modifier){
-    Column(modifier.then(Modifier.fillMaxSize())) {
-        ShowTeamLogo(Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp))
-
-        SeasonRecordWidget(uiState.record, Modifier.width(160.dp).align(Alignment.CenterHorizontally).padding(bottom = 16.dp))
-
-        if(uiState.lastGameResult !is PreviousGameResult.NoResult){
-            PreviousGameResultWidget("Last Game", uiState.lastGameResult, Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp))
-        }
-
-        NextGameWidget("Next Game", uiState.nextGame, Modifier.align(Alignment.CenterHorizontally))
-    }
-}
-
-@Composable
-fun ShowLoading(modifier: Modifier = Modifier){
-    Column(modifier.then(Modifier.fillMaxSize())) {
-        ShowTeamLogo(Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
-
-        Box(Modifier.width(150.dp).height(50.dp).background(ShimmerBackground()).padding(bottom = 8.dp).align(Alignment.CenterHorizontally))
-        Box(Modifier.width(150.dp).height(50.dp).background(ShimmerBackground()).padding(bottom = 8.dp).align(Alignment.CenterHorizontally))
-        Box(Modifier.width(150.dp).height(50.dp).background(ShimmerBackground()).padding(bottom = 8.dp).align(Alignment.CenterHorizontally))
-    }
-}
-
-@Composable
-private fun ShowTeamLogo(modifier: Modifier){
-    Image(painter = painterResource(R.drawable.dragons_hockey_logo),
-        contentDescription = "Dragons Hockey",
-        modifier = modifier)
-}
 

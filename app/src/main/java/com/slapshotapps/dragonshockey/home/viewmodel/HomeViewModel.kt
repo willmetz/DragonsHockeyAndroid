@@ -2,12 +2,9 @@ package com.slapshotapps.dragonshockey.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
 import com.slapshotapps.dragonshockey.repository.GameResultRepository
-import com.slapshotapps.dragonshockey.repository.GameResults
-import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleResult
 import com.slapshotapps.dragonshockey.repository.SeasonRecordResult
@@ -15,14 +12,8 @@ import com.slapshotapps.dragonshockey.widgets.NextGame
 import com.slapshotapps.dragonshockey.widgets.PreviousGameResult
 import com.slapshotapps.dragonshockey.widgets.SeasonRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.zip
 import java.time.LocalDateTime
@@ -36,10 +27,8 @@ sealed interface HomeScreenState{
 }
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val rosterRepository: RosterRepository,
-                                        private val scheduleRepository: ScheduleRepository,
-                                        private val gameResultRepository: GameResultRepository,
-                                        @IoDispatcher private val ioDispatcher: CoroutineDispatcher) : ViewModel()
+class HomeViewModel @Inject constructor(scheduleRepository: ScheduleRepository,
+                                        gameResultRepository: GameResultRepository) : ViewModel()
 {
     val homeScreenState : StateFlow<HomeScreenState> =
         scheduleRepository.getSchedule().zip(gameResultRepository.getSeasonRecord()) { scheduleResult, gameResult ->
