@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -43,12 +44,19 @@ fun RosterScreen(rosterViewModel: RosterViewModel = hiltViewModel<RosterViewMode
 private fun HasRosterContent(rosterData: RosterScreenState.HasRoster, modifier: Modifier = Modifier) {
     LazyColumn {
         item{
-            RosterRow("Number", "Name", "Position", Modifier.background(Color.Red))
+            Text("Dragons Hockey", Modifier.background(Color.Red).fillMaxWidth().height(50.dp).wrapContentHeight(align = Alignment.CenterVertically),
+                textAlign = TextAlign.Center, style = Typography.headlineSmall)
+
         }
         var playerCount = 0
-        items(rosterData.players){
-            val color = if(playerCount++ % 2 == 0) Color.LightGray else Color.White
-            RosterRow(it.number, it.name, it.position, Modifier.background(color))
+        items(rosterData.rosterDetails){
+            when(it){
+                is RosterElement.Header -> HeaderRow(it.headerLabel)
+                is RosterElement.RosterMember -> {
+                    val color = if( rosterData.rosterDetails.indexOf(it) % 2 == 1) Color.LightGray else Color.White
+                    RosterRow(it.player.number, it.player.name, it.player.position, Modifier.background(color))
+                }
+            }
         }
     }
 }
@@ -81,33 +89,39 @@ private fun RosterRow(firstColumnText: String, secondColumnText: String, thirdCo
      Row(modifier.then(
          Modifier
              .fillMaxWidth()
-             .height(30.dp)
+             .height(45.dp)
              .padding(horizontal = 8.dp)), verticalAlignment = Alignment.CenterVertically) {
-         Text(firstColumnText, Modifier.weight(0.25f), textAlign = TextAlign.Start)
-         Text(secondColumnText, Modifier.weight(0.5f), textAlign = TextAlign.Center)
-         Text(thirdColumnText, Modifier.weight(0.25f), textAlign = TextAlign.End)
+         Text(firstColumnText, Modifier.weight(0.25f), textAlign = TextAlign.Start, style = Typography.titleMedium)
+         Text(secondColumnText, Modifier.weight(0.5f), textAlign = TextAlign.Center, style = Typography.titleMedium)
+         Text(thirdColumnText, Modifier.weight(0.25f), textAlign = TextAlign.End, style = Typography.titleMedium)
     }
 }
 
-
-@Preview
 @Composable
-private fun HeaderAndRowPreview() {
-    Column {
-        RosterRow("Number", "Name", "Position")
-        RosterRow("71", "Dylan Larkin", "Forward", Modifier.background(Color.Gray))
+private fun HeaderRow(label: String, modifier: Modifier = Modifier){
+    Row(modifier.then(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .height(50.dp)
+            .padding(horizontal = 8.dp)), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = Typography.headlineMedium)
     }
 }
+
 
 @Preview
 @Composable
 private fun HasRosterContentPreview(){
-    val players = listOf(RosterPlayer("F", "Jack Hughes", "25"),
-        RosterPlayer("F", "Quinn Hughes", "26"),
-        RosterPlayer("F", "Jeff Hughes", "27"),
-        RosterPlayer("F", "Jim Hughes", "28"),
-        RosterPlayer("F", "Steve Hughes", "29"),
-        RosterPlayer("F", "Bob Hughes", "30"))
+    val players = listOf(
+        RosterElement.Header("Forward"),
+        RosterElement.RosterMember(RosterPlayer("F", "Jack Hughes", "25")),
+        RosterElement.RosterMember(RosterPlayer("F", "Quinn Hughes", "26")),
+        RosterElement.RosterMember(RosterPlayer("F", "Jeff Hughes", "27")),
+        RosterElement.RosterMember(RosterPlayer("F", "Jim Hughes", "28")),
+        RosterElement.Header("Defense"),
+        RosterElement.RosterMember(RosterPlayer("F", "Steve Hughes", "29")),
+        RosterElement.RosterMember(RosterPlayer("F", "Bob Hughes", "30")))
      HasRosterContent(RosterScreenState.HasRoster(players))
 }
 
