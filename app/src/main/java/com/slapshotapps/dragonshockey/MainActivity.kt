@@ -28,6 +28,8 @@ import androidx.navigation.compose.rememberNavController
 import com.slapshotapps.dragonshockey.home.screen.HomeScreen
 import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
 import com.slapshotapps.dragonshockey.roster.RosterScreen
+import com.slapshotapps.dragonshockey.schedule.ScheduleElement
+import com.slapshotapps.dragonshockey.schedule.ScheduleScreen
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
 
                         composable<Home> { HomeScreen() }
                         composable<Roster> { RosterScreen() }
+                        composable<Schedule> { ScheduleScreen() }
                     }
                 }
             }

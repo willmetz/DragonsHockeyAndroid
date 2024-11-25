@@ -17,9 +17,11 @@ import javax.inject.Inject
 
 
 
-sealed interface ScheduleElement{
-    data class GameWithResult(val gameDate: String, val gameTime: String, val opponentName: String, val home: Boolean, val result: GameResultData) : ScheduleElement
-    data class Game(val gameDate: String, val gameTime: String, val opponentName: String, val home: Boolean) : ScheduleElement
+sealed class ScheduleElement(open val gameDate: String, open val gameTime: String, open val opponentName: String, open val home: Boolean){
+    data class GameWithResult(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean, val result: GameResultData) :
+        ScheduleElement(gameDate, gameTime, opponentName, home)
+    data class Game(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean):
+        ScheduleElement(gameDate, gameTime, opponentName, home)
 }
 
 sealed interface ScheduleScreenState{
@@ -34,13 +36,13 @@ sealed interface ScheduleScreenState{
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(scheduleRepository: ScheduleRepository) : ViewModel() {
 
-    private val gameTimeFormater = DateTimeFormatter.ofPattern("H:mm a")
+    private val gameTimeFormater = DateTimeFormatter.ofPattern("h:mm a")
     private val gameDateFormater = DateTimeFormatter.ofPattern("EEE MMM d")
 
     val scheduleState : StateFlow<ScheduleScreenState> = scheduleRepository.getSchedule().map {resultData ->
         when(resultData){
             is ScheduleResult.HasSchedule -> {
-                resultData.seasonSchedule.map { convertToScheduleElement(it) }.let { data ->
+                resultData.seasonSchedule.sortedBy { it.gameTime }.map { convertToScheduleElement(it) }.let { data ->
                     ScheduleScreenState.HasSchedule(data)
                 }
             }
