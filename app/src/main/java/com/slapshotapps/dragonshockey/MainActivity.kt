@@ -14,12 +14,19 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,6 +38,7 @@ import com.slapshotapps.dragonshockey.roster.RosterScreen
 import com.slapshotapps.dragonshockey.schedule.ScheduleElement
 import com.slapshotapps.dragonshockey.schedule.ScheduleScreen
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
+import com.slapshotapps.dragonshockey.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
 
@@ -48,11 +56,11 @@ object Settings
 
 
 val bottomNavRoutes = listOf(
-    TopLevelRoutes("Home", Home, Icons.Filled.Home),
-    TopLevelRoutes("Stats", Stats, Icons.Filled.Build),
-    TopLevelRoutes("Roster", Roster, Icons.Filled.Person),
-    TopLevelRoutes("Schedule", Schedule, Icons.Filled.DateRange),
-    TopLevelRoutes("Settings", Settings, Icons.Filled.Settings)
+    TopLevelRoutes("Home", Home,  R.drawable.home),
+    TopLevelRoutes("Stats", Stats, R.drawable.stats),
+    TopLevelRoutes("Roster", Roster, R.drawable.roster),
+    TopLevelRoutes("Schedule", Schedule, R.drawable.schedule),
+    TopLevelRoutes("Settings", Settings, R.drawable.settings)
 )
 
 
@@ -84,19 +92,25 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun BottomBarComponent(navController: NavHostController) {
-        BottomNavigation() {
+        BottomNavigation(
+            backgroundColor = Color.White
+        ) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
+
             bottomNavRoutes.forEach { topLevelRoute ->
+                val selected = currentDestination?.route?.endsWith(topLevelRoute.name) == true
+                println("bottom nav state changed: Current Route = ${currentDestination?.route}  top level route = ${topLevelRoute.name}")
                 BottomNavigationItem(
                     icon = {
                         Icon(
-                            topLevelRoute.icon,
-                            contentDescription = topLevelRoute.name
+                            ImageVector.vectorResource(topLevelRoute.iconResource),
+                            contentDescription = topLevelRoute.name,
+                            tint = if(selected) Color.Red else Color(0.98f, 0.68f, 0.68f)
                         )
                     },
-                    label = { Text(topLevelRoute.name) },
-                    selected = currentDestination?.route == topLevelRoute.name,
+                    label = { Text(text = topLevelRoute.name, style = Typography.bodyMedium, color = Color.Black) },
+                    selected = selected,
                     onClick = {
                         navController.navigate(topLevelRoute.route) {
                             // Pop up to the start destination of the graph to
