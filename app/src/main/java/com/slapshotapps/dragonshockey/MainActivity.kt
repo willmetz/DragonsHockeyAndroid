@@ -37,6 +37,7 @@ import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
 import com.slapshotapps.dragonshockey.roster.RosterScreen
 import com.slapshotapps.dragonshockey.schedule.ScheduleElement
 import com.slapshotapps.dragonshockey.schedule.ScheduleScreen
+import com.slapshotapps.dragonshockey.stats.SeasonStatsScreen
 import com.slapshotapps.dragonshockey.ui.theme.DragonsHockeyRefreshTheme
 import com.slapshotapps.dragonshockey.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,6 +85,7 @@ class MainActivity : ComponentActivity() {
                         composable<Home> { HomeScreen() }
                         composable<Roster> { RosterScreen() }
                         composable<Schedule> { ScheduleScreen() }
+                        composable<Stats> { SeasonStatsScreen() }
                     }
                 }
             }

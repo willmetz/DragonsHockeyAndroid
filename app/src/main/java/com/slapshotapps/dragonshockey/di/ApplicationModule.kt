@@ -13,6 +13,8 @@ import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterRepositoryImp
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleRepositoryImp
+import com.slapshotapps.dragonshockey.repository.SeasonStatRepository
+import com.slapshotapps.dragonshockey.repository.SeasonStatsRepositoryImp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +45,9 @@ class ApplicationModule {
     @Provides
     fun providesGameResultRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : GameResultRepository = GameResultRepositoryImp(database, authenticationManager)
 
+    @Provides
+    fun providesSeasonStatsRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : SeasonStatRepository = SeasonStatsRepositoryImp(database, authenticationManager)
+
     @IoDispatcher
     @Provides
     fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
@@ -50,4 +55,6 @@ class ApplicationModule {
     @MainDispatcher
     @Provides
     fun providesMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+
+
 }
