@@ -6,19 +6,19 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
-import com.slapshotapps.dragonshockey.models.SeasonStats
+import com.slapshotapps.dragonshockey.models.GameStats
+import com.slapshotapps.dragonshockey.models.PlayerGameStats
 import com.slapshotapps.dragonshockey.network.models.GameStatsDTO
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-
 import javax.inject.Inject
 
 
 sealed interface SeasonStatsResult{
     data object Error: SeasonStatsResult
     data object NoResults : SeasonStatsResult
-    data class HasStats(val seasonStats: List<SeasonStats>): SeasonStatsResult
+    data class HasStats(val seasonStats: List<GameStats>): SeasonStatsResult
 }
 
 interface SeasonStatRepository{
@@ -38,10 +38,9 @@ class SeasonStatsRepositoryImp @Inject constructor(private val database: Firebas
                 }
 
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    //TODO
-                    dataSnapshot.toList<GameStatsDTO>(gson).takeIf { it.isNotEmpty() }?.apply {
-                        this@callbackFlow.trySend(SeasonStatsResult.NoResults)
-                    }?: this@callbackFlow.trySend(SeasonStatsResult.NoResults)
+                    dataSnapshot.toList<GameStatsDTO>(gson).takeIf { it.isNotEmpty() }?.mapNotNull {
+                        dto -> toGameStatModel(dto) }?.let { this@callbackFlow.trySend(SeasonStatsResult.HasStats(it))
+                    } ?: this@callbackFlow.trySend(SeasonStatsResult.NoResults)
                 }
             }
 
@@ -52,4 +51,11 @@ class SeasonStatsRepositoryImp @Inject constructor(private val database: Firebas
             }
         }
     }
+
+    private fun toGameStatModel(dto: GameStatsDTO?) = dto?.run {
+            GameStats(gameID ?: 0, stats?.map {
+                PlayerGameStats(it.goals ?: 0, it.assists ?: 0, it.penaltyMinutes ?:0,
+                    it.goalsAgainst ?: 0, it.playerId ?: 0, it.present ?: false)
+            } ?: listOf() )
+        }
 }
