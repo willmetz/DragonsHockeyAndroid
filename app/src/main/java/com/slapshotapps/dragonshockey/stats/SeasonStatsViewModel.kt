@@ -10,6 +10,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
+sealed interface PlayerData{
+    data class SkaterData(val name: String, val position: String, val gamesPlayed: String,
+                          val goals: String, val assists: String, val points: String,
+                          val penaltyMinutes: String) : PlayerData
+    data class GoalieData(val name: String, val position: String, val gamesPlayed: String,
+                          val goalsAgainstAverage: String, val shutouts: String,
+                          val penaltyMinutes: String) : PlayerData
+}
+
 sealed interface SeasonStatScreenState{
     data object loading : SeasonStatScreenState
     data class onError(val message: String) : SeasonStatScreenState
