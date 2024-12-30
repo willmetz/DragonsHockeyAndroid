@@ -1,5 +1,7 @@
 package com.slapshotapps.dragonshockey.repository
 
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toUpperCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -8,6 +10,8 @@ import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
 import com.slapshotapps.dragonshockey.models.Player
+import com.slapshotapps.dragonshockey.models.PlayerPosition
+import com.slapshotapps.dragonshockey.models.Shot
 import com.slapshotapps.dragonshockey.network.models.PlayerDTO
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -61,8 +65,23 @@ class RosterRepositoryImp @Inject constructor(private val database: FirebaseData
                 it?.lastName.orEmpty(),
                 it?.number?.toString() ?: "0",
                 it?.playerID?.toInt() ?: 0,
-                it?.position?: "F", it?.shot?: "R")
+                toPlayerPosition(it?.position?: "F"),
+                toShotHand(it?.shot?: "R"))
         }
     }
 
+    private fun toPlayerPosition(position: String) : PlayerPosition{
+        return when(position.toUpperCase(Locale.current)){
+            "D" -> PlayerPosition.Defense
+            "G" -> PlayerPosition.Goalie
+            else -> PlayerPosition.Forward
+        }
+    }
+
+    private fun toShotHand(shot: String) : Shot{
+        return when(shot.toUpperCase(Locale.current)){
+            "L" -> Shot.Left
+            else -> Shot.Right
+        }
+    }
 }

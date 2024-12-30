@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.extensions.string.titleCase
 import com.slapshotapps.dragonshockey.models.Player
+import com.slapshotapps.dragonshockey.models.PlayerPosition
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,10 +77,10 @@ class RosterViewModel @Inject constructor(rosterRepository: RosterRepository) : 
         return sortedRoster
     }
 
-    private fun getPosition(positionValue: String) = when(positionValue.toUpperCase(Locale.current).trim()){
-        "D" -> DEFENSE
-        "G" -> GOALIE
-        else -> FORWARD
+    private fun getPosition(position: PlayerPosition) = when(position){
+        PlayerPosition.Defense -> DEFENSE
+        PlayerPosition.Goalie -> GOALIE
+        PlayerPosition.Forward -> FORWARD
     }
 
     private fun getRosterName(firstName: String, lastName: String) = "${firstName.titleCase()} ${lastName.titleCase()}"
