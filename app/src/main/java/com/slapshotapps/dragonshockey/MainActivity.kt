@@ -61,7 +61,7 @@ val bottomNavRoutes = listOf(
     TopLevelRoutes("Stats", Stats, R.drawable.stats),
     TopLevelRoutes("Roster", Roster, R.drawable.roster),
     TopLevelRoutes("Schedule", Schedule, R.drawable.schedule),
-    TopLevelRoutes("Settings", Settings, R.drawable.settings)
+ //   TopLevelRoutes("Settings", Settings, R.drawable.settings)
 )
 
 

@@ -17,9 +17,12 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 sealed interface PlayerData{
-    data class SkaterData(val name: String, val position: String, val gamesPlayed: String,
-                          val goals: String, val assists: String, val points: String,
-                          val penaltyMinutes: String) : PlayerData
+    data class ForwardData(val name: String, val position: String, val gamesPlayed: String,
+                           val goals: String, val assists: String, val points: String,
+                           val penaltyMinutes: String) : PlayerData
+    data class DefenseData(val name: String, val position: String, val gamesPlayed: String,
+                           val goals: String, val assists: String, val points: String,
+                           val penaltyMinutes: String) : PlayerData
     data class GoalieData(val name: String, val position: String, val gamesPlayed: String,
                           val goalsAgainst: String, val goalsAgainstAverage: String, val shutouts: String,
                           val penaltyMinutes: String) : PlayerData
@@ -40,7 +43,7 @@ class SeasonStatsViewModel @Inject constructor(seasonStatRepository: SeasonStatR
                 when (stats) {
                     SeasonStatsResult.Error -> SeasonStatScreenState.OnError("Oops, looks like there was an issue.  Check back later")
                     is SeasonStatsResult.HasStats -> SeasonStatScreenState.OnDataReady(
-                        buildSeasonStats(stats.seasonStats, roster.players)
+                        orderStatsForDisplay(buildSeasonStats(stats.seasonStats, roster.players))
                     )
 
                     SeasonStatsResult.NoResults -> SeasonStatScreenState.NoDataAvailable
@@ -71,7 +74,8 @@ class SeasonStatsViewModel @Inject constructor(seasonStatRepository: SeasonStatR
             }
 
             when(player.position){
-                PlayerPosition.Defense, PlayerPosition.Forward -> seasonStats.add(getSkaterData(player, playerInfo))
+                PlayerPosition.Forward -> seasonStats.add(getFowardData(player, playerInfo))
+                PlayerPosition.Defense -> seasonStats.add(getDefenseData(player, playerInfo))
                 PlayerPosition.Goalie -> seasonStats.add(getGoalieData(player, playerInfo))
             }
 
@@ -80,8 +84,29 @@ class SeasonStatsViewModel @Inject constructor(seasonStatRepository: SeasonStatR
         return seasonStats
     }
 
-    private fun getSkaterData(player: Player, stats: LocalStatInfo) = PlayerData.SkaterData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
+    private fun orderStatsForDisplay(data: List<PlayerData>) : List<PlayerData>{
+        val forwards = data.filterIsInstance<PlayerData.ForwardData>()
+            .sortedWith(compareByDescending<PlayerData.ForwardData> {it.points.toIntOrNull()?:0}.thenBy { it.name.split("").last() })
+
+        val defense = data.filterIsInstance<PlayerData.DefenseData>()
+            .sortedWith(compareByDescending<PlayerData.DefenseData> {it.points.toIntOrNull()?:0}.thenByDescending { it.name.split("").last() })
+
+        val goalies = data.filterIsInstance<PlayerData.GoalieData>()
+            .sortedWith(compareByDescending { it.name.split(" ").last() })
+
+        return mutableListOf<PlayerData>().apply {
+            addAll(forwards)
+            addAll(defense)
+            addAll(goalies)
+        }.toList()
+    }
+
+
+    private fun getFowardData(player: Player, stats: LocalStatInfo) = PlayerData.ForwardData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
             stats.goals.toString(), stats.assists.toString(), stats.points().toString(), stats.pim.toString() )
+
+    private fun getDefenseData(player: Player, stats: LocalStatInfo) = PlayerData.DefenseData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
+        stats.goals.toString(), stats.assists.toString(), stats.points().toString(), stats.pim.toString() )
 
     private fun getGoalieData(player: Player, stats: LocalStatInfo) = PlayerData.GoalieData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
         stats.goalsAgainst.toString(), getGoalsAgainstAverage(stats), stats.shutouts.toString(), stats.pim.toString() )

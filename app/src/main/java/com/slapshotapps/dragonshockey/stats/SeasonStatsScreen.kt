@@ -76,7 +76,8 @@ private fun SeasonStatContent(playerStats: List<PlayerData>, modifier: Modifier 
             Card {
                 when(it){
                     is PlayerData.GoalieData -> GoalieStatCard(it)
-                    is PlayerData.SkaterData -> PlayerStatCard(it)
+                    is PlayerData.ForwardData -> PlayerStatCard(it)
+                    is PlayerData.DefenseData -> PlayerStatCard(it)
                 }
             }
             if(playerStats.indexOf(it) != playerStats.size) Spacer(Modifier.height(4.dp))
@@ -86,7 +87,41 @@ private fun SeasonStatContent(playerStats: List<PlayerData>, modifier: Modifier 
 
 
 @Composable
-private fun PlayerStatCard(data: PlayerData.SkaterData, modifier: Modifier = Modifier){
+private fun PlayerStatCard(data: PlayerData.ForwardData, modifier: Modifier = Modifier){
+    val gamesLabelWidth = measureTextWidth("Games", Typography.titleSmall)
+    val gamesWidth = measureTextWidth(data.gamesPlayed, Typography.titleSmall)
+    val goalsLabelWidth = measureTextWidth("Goals", Typography.titleSmall)
+    val goalsWidth = measureTextWidth(data.goals, Typography.titleSmall)
+    val assistsLabelWidth = measureTextWidth("Assists", Typography.titleSmall)
+    val assistsWidth = measureTextWidth(data.assists, Typography.titleSmall)
+    val pointsLabelsWidth = measureTextWidth("Points", Typography.titleSmall)
+    val pointsWidth = measureTextWidth(data.points, Typography.titleSmall)
+    val pimLabelWidth = measureTextWidth("PIM", Typography.titleSmall)
+    val pimWidth = measureTextWidth(data.penaltyMinutes, Typography.titleSmall)
+
+    Column(modifier.then(Modifier.padding(4.dp))) {
+        Text("${data.name} (${data.position})", style = Typography.titleMedium)
+
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Text("Games", style = Typography.titleSmall, modifier = Modifier.weight(0.2f))
+            Text("Goals", style = Typography.titleSmall, modifier = Modifier.weight(0.2f))
+            Text("Assists", style = Typography.titleSmall, modifier = Modifier.weight(0.2f))
+            Text("Points", style = Typography.titleSmall, modifier = Modifier.weight(0.2f))
+            Text("PIM", style = Typography.titleSmall, modifier = Modifier.weight(0.2f))
+        }
+
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Text(text = data.gamesPlayed, style = Typography.titleSmall, modifier = Modifier.weight(0.2f).padding(start = getSafePadding(gamesLabelWidth, gamesWidth)))
+            Text(text = data.goals, style = Typography.titleSmall, modifier = Modifier.weight(0.2f).padding(start = getSafePadding(goalsLabelWidth, goalsWidth)))
+            Text(text = data.assists, style = Typography.titleSmall, modifier = Modifier.weight(0.2f).padding(start = getSafePadding(assistsLabelWidth, assistsWidth)))
+            Text(text = data.points, style = Typography.titleSmall, modifier = Modifier.weight(0.2f).padding(start = getSafePadding(pointsLabelsWidth, pointsWidth)))
+            Text(text = data.penaltyMinutes, style = Typography.titleSmall, modifier = Modifier.weight(0.2f).padding(start = getSafePadding(pimLabelWidth, pimWidth)))
+        }
+    }
+}
+
+@Composable
+private fun PlayerStatCard(data: PlayerData.DefenseData, modifier: Modifier = Modifier){
     val gamesLabelWidth = measureTextWidth("Games", Typography.titleSmall)
     val gamesWidth = measureTextWidth(data.gamesPlayed, Typography.titleSmall)
     val goalsLabelWidth = measureTextWidth("Goals", Typography.titleSmall)
@@ -167,6 +202,6 @@ private fun ViewGoalieCard(){
 @Composable
 @Preview
 private fun ViewPlayerCard(){
-    PlayerStatCard(PlayerData.SkaterData("Wayne Gretzky", "F", "2",
+    PlayerStatCard(PlayerData.ForwardData("Wayne Gretzky", "F", "2",
         "4", "5", "9", "3"))
 }
