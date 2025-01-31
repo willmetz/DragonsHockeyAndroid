@@ -1,7 +1,10 @@
 package com.slapshotapps.dragonshockey.schedule
 
 import android.graphics.Path.Op
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHost
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.slapshotapps.dragonshockey.models.GameResultData
 import com.slapshotapps.dragonshockey.ui.theme.Typography
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
@@ -31,7 +37,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 private val SCHEDULE_ELEMENT_HEIGHT = 75.dp
 
 @Composable
-fun ScheduleScreen(viewModel: ScheduleViewModel = hiltViewModel<ScheduleViewModel>())  {
+fun ScheduleScreen(onEditGame: ((Int) -> Unit), viewModel: ScheduleViewModel = hiltViewModel<ScheduleViewModel>())  {
     val state = viewModel.scheduleState.collectAsStateWithLifecycle()
 
     Column {
@@ -44,7 +50,7 @@ fun ScheduleScreen(viewModel: ScheduleViewModel = hiltViewModel<ScheduleViewMode
             is ScheduleScreenState.HasSchedule -> {
                 LazyColumn {
                     items(info.games){
-                        ScheduleItem(it)
+                        ScheduleItem(it, onEditGame)
                         if(info.games.last() != it){
                             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.Gray))
                         }
@@ -80,13 +86,17 @@ private fun LoadingScreen(){
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ScheduleItem(data: ScheduleElement){
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(SCHEDULE_ELEMENT_HEIGHT)) {
+private fun ScheduleItem(data: ScheduleElement, onEditGame: (Int) -> Unit){
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+        .height(SCHEDULE_ELEMENT_HEIGHT)
+        .combinedClickable(onClick = {}, onLongClick = {onEditGame(data.gameID)})) {
         GameTimeElement(data, Modifier.weight(1f))
         OpponentElement(data, Modifier.weight(1f))
         GameResultElement((data as? ScheduleElement.GameWithResult)?.result, Modifier.weight(1f))
     }
+
 }
 
 @Composable
@@ -127,11 +137,11 @@ private fun GameResultElement(data: GameResultData?, modifier: Modifier = Modifi
 @Preview
 @Composable
 private fun GametimeElementPreview(){
-    GameTimeElement(ScheduleElement.Game("Mon Sep 9th", "8:00 PM", "Bob", false))
+    GameTimeElement(ScheduleElement.Game("Mon Sep 9th", "8:00 PM", "Bob", false, 0))
 }
 
 @Preview
 @Composable
 private fun ScheduleItemPreview(){
-    ScheduleItem(ScheduleElement.Game("Mon Sep 9th", "8:00 PM", "Bob", false))
+    ScheduleItem(ScheduleElement.Game("Mon Sep 9th", "8:00 PM", "Bob", false, 0), {})
 }

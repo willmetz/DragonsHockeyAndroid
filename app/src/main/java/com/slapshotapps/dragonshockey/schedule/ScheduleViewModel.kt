@@ -17,11 +17,11 @@ import javax.inject.Inject
 
 
 
-sealed class ScheduleElement(open val gameDate: String, open val gameTime: String, open val opponentName: String, open val home: Boolean){
-    data class GameWithResult(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean, val result: GameResultData) :
-        ScheduleElement(gameDate, gameTime, opponentName, home)
-    data class Game(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean):
-        ScheduleElement(gameDate, gameTime, opponentName, home)
+sealed class ScheduleElement(open val gameDate: String, open val gameTime: String, open val opponentName: String, open val home: Boolean, open val gameID: Int){
+    data class GameWithResult(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean, override val gameID: Int, val result: GameResultData) :
+        ScheduleElement(gameDate, gameTime, opponentName, home, gameID)
+    data class Game(override val gameDate: String, override val gameTime: String, override val opponentName: String, override val home: Boolean, override val gameID: Int):
+        ScheduleElement(gameDate, gameTime, opponentName, home, gameID)
 }
 
 sealed interface ScheduleScreenState{
@@ -55,13 +55,14 @@ class ScheduleViewModel @Inject constructor(scheduleRepository: ScheduleReposito
     private fun convertToScheduleElement(game: Game) : ScheduleElement{
         val gameDate = game.gameTime?.let { gameDateFormater.format(it) } ?: "Unknown Date"
         val gameTime = game.gameTime?.let { gameTimeFormater.format(it) } ?: "Unknown Time"
+        game.gameID
 
         return when(game.result){
             GameResultData.UnknownResult -> {
-                ScheduleElement.Game(gameDate, gameTime, game.opponentName, game.isHome)
+                ScheduleElement.Game(gameDate, gameTime, game.opponentName, game.isHome, game.gameID)
             }
             else -> {
-                ScheduleElement.GameWithResult(gameDate, gameTime, game.opponentName, game.isHome, game.result)
+                ScheduleElement.GameWithResult(gameDate, gameTime, game.opponentName, game.isHome, game.gameID, game.result)
             }
         }
     }
