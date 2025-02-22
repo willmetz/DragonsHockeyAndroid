@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.slapshotapps.dragonshockey.admin.AuthLandingScreen
+import com.slapshotapps.dragonshockey.admin.editgame.EditGameScreen
 import com.slapshotapps.dragonshockey.home.screen.HomeScreen
 import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
 import com.slapshotapps.dragonshockey.roster.RosterScreen
@@ -66,7 +67,8 @@ val bottomNavRoutes = listOf(
 )
 
 enum class SubNavRoutes(){
-    AdminLandingScreen
+    AdminLandingScreen,
+    AdminEditGameScreen
 }
 
 @AndroidEntryPoint
@@ -91,8 +93,9 @@ class MainActivity : ComponentActivity() {
                         composable<Schedule> { ScheduleScreen({ gameID -> navController.navigate(SubNavRoutes.AdminLandingScreen.name)}) }
                         composable<Stats> { SeasonStatsScreen() }
                         composable(route = SubNavRoutes.AdminLandingScreen.name ){
-                            AuthLandingScreen()
+                            AuthLandingScreen({ navController.navigate(SubNavRoutes.AdminEditGameScreen.name) })
                         }
+                        composable(route = SubNavRoutes.AdminEditGameScreen.name){ EditGameScreen() }
                     }
                 }
             }
