@@ -48,18 +48,18 @@ fun EditScreenContent(){
             Text("Dragons Score")
         }, onValueChange = {},
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 4.dp, end = 4.dp))
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 8.dp, end = 8.dp))
 
         TextField(opponentScore, label = {
             Text("TBD Score")
         }, onValueChange = {},
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 4.dp, end = 4.dp))
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp))
 
         isOTL(isOtlLoss, "OTL:") { isOtlLoss = it }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
             Button({}) {
                 Text("Edit Stats")
             }
@@ -76,7 +76,7 @@ fun GameLabel(text: String){
 @Composable
 fun isOTL(isChecked: Boolean, label: String, onChecked: (Boolean) -> Unit){
     Column(horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()) {
+        modifier = Modifier.fillMaxWidth().padding(top=16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(label)
             Checkbox(checked = isChecked, onCheckedChange = onChecked)
