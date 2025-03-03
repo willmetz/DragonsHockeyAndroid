@@ -1,5 +1,8 @@
 package com.slapshotapps.dragonshockey.admin.editgamestats
 
+import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+
 
 sealed interface PlayerEditGameStats {
     data class SkaterStats(val name: String, val position: String, val goals: String,
@@ -8,5 +11,7 @@ sealed interface PlayerEditGameStats {
                            val penaltyMins: String) : PlayerEditGameStats
 }
 
-class EditGameStatsViewModel {
+@HiltViewModel
+class EditGameStatsViewModel : ViewModel() {
+
 }
