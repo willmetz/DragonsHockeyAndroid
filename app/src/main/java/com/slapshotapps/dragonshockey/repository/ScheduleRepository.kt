@@ -1,6 +1,5 @@
 package com.slapshotapps.dragonshockey.repository
 
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -21,6 +20,7 @@ import kotlin.coroutines.resume
 
 interface ScheduleRepository {
     fun getSchedule(): Flow<ScheduleResult>
+    suspend fun getGame(gameID: Int) : ScheduleGameResult
 }
 
 sealed interface ScheduleResult{
@@ -63,7 +63,7 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val
         }
     }
 
-    suspend fun getGame(gameID: Int) : ScheduleGameResult {
+    override suspend fun getGame(gameID: Int) : ScheduleGameResult {
         auth.authenticateUserAnonymously()
         return getSingleGameResult(gameID)
     }
