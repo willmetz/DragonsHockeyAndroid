@@ -24,25 +24,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 
 @Composable
-fun EditGameScreen(gameViewMode: EditGameViewModel = hiltViewModel<EditGameViewModel>()){
-    EditScreenContent()
+fun EditGameScreen(gameViewModel: EditGameViewModel = hiltViewModel<EditGameViewModel>()){
+    gameViewModel.gameState.collectAsStateWithLifecycle().value.let {
+        when(it){
+            is EditGameState.OnError -> {}
+            is EditGameState.OnGameReady -> EditScreenContent(it)
+            EditGameState.OnLoading -> Loading()
+        }
+    }
 }
 
 @Composable
-fun EditScreenContent(){
-    var dragonsScore by remember { mutableStateOf("0") }
-    var opponentScore by remember { mutableStateOf("0") }
-    var isOtlLoss by remember { mutableStateOf(false) }
+fun Loading(){
+
+}
+
+@Composable
+fun EditScreenContent(state: EditGameState.OnGameReady){
+    var dragonsScore by remember { mutableStateOf(state.teamScore) }
+    var opponentScore by remember { mutableStateOf(state.opponentScore) }
+    var isOtlLoss by remember { mutableStateOf(state.isOTL) }
 
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(8.dp))
-        GameLabel("Game ID: TBD")
+        GameLabel("Game ID: ${state.gameID}")
         Spacer(Modifier.height(8.dp))
-        GameLabel("Game Date: TBD")
-        GameLabel("Game Time: TBD")
+        GameLabel("Game Date: ${state.gameDate}")
+        GameLabel("Game Time: ${state.gameTime}")
         Spacer(Modifier.height(8.dp))
 
         TextField(dragonsScore, label = {
@@ -52,7 +64,7 @@ fun EditScreenContent(){
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 8.dp, end = 8.dp))
 
         TextField(opponentScore, label = {
-            Text("TBD Score")
+            Text("${state.opponent} score")
         }, onValueChange = {},
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp))
@@ -89,6 +101,8 @@ fun isOTL(isChecked: Boolean, label: String, onChecked: (Boolean) -> Unit){
 @Preview
 @Composable
 fun PreviewForEditGame(){
-    EditScreenContent()
+    EditGameState.OnGameReady("12", "12/2/25", "8:00 pm", "3", "0", "Benders", false).let {
+        EditScreenContent(it)
+    }
 }
 

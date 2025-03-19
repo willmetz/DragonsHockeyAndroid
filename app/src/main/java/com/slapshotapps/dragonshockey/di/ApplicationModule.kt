@@ -40,7 +40,8 @@ class ApplicationModule {
     fun providesRosterRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : RosterRepository = RosterRepositoryImp(database, authenticationManager)
 
     @Provides
-    fun providesScheduleRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : ScheduleRepository = ScheduleRepositoryImp(database, authenticationManager)
+    fun providesScheduleRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager,
+                             @IoDispatcher dispatcher: CoroutineDispatcher) : ScheduleRepository = ScheduleRepositoryImp(database, authenticationManager, dispatcher)
 
     @Provides
     fun providesGameResultRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : GameResultRepository = GameResultRepositoryImp(database, authenticationManager)

@@ -2,6 +2,7 @@ package com.slapshotapps.dragonshockey.admin.editgame
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.slapshotapps.dragonshockey.di.GameID
 import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
@@ -10,8 +11,11 @@ import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -27,38 +31,37 @@ sealed interface EditGameState{
 }
 
 @HiltViewModel
-class EditGameViewModel @Inject constructor(private val scheduleRepository: ScheduleRepository, @IoDispatcher private val ioDispatcher: CoroutineDispatcher): ViewModel() {
+class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
+                                            private val scheduleRepository: ScheduleRepository,
+                                            @IoDispatcher private val ioDispatcher: CoroutineDispatcher): ViewModel() {
 
     private val gameTimeFormater = DateTimeFormatter.ofPattern("h:mm a")
     private val gameDateFormater = DateTimeFormatter.ofPattern("EEE MMM d")
 
     private val _gameState = MutableStateFlow<EditGameState>(EditGameState.OnLoading)
-    val gameState : StateFlow<EditGameState> = _gameState.asStateFlow()
-
-    fun onGetGameInfo(gameID: Int){
-        viewModelScope.launch(ioDispatcher) {
-            scheduleRepository.getGame(gameID).let { result ->
-                when(result){
-                    is ScheduleGameResult.GameAvailable -> {
-                        val data = EditGameState.OnGameReady(
-                            result.gameInfo.gameID.toString(),
-                            formatGameDate(result.gameInfo.gameTime),
-                            formatGameTime(result.gameInfo.gameTime),
-                            getTeamScore(result.gameInfo),
-                            getOpponentScore(result.gameInfo),
-                            result.gameInfo.opponentName,
-                            isOTL(result.gameInfo)
-                        )
-
-                        _gameState.emit(data)
-                    }
-                    ScheduleGameResult.GameUnavailable -> {
-                        _gameState.emit(EditGameState.OnError("Error Loading Game Info"))
-                    }
+    val gameState : StateFlow<EditGameState> =
+        scheduleRepository.getGame(gameID).map { result ->
+            when(result){
+                is ScheduleGameResult.GameAvailable -> {
+                    createReadyGameState(result)
+                }
+                ScheduleGameResult.GameUnavailable -> {
+                    EditGameState.OnError("Error Loading Game Info")
                 }
             }
-        }
-    }
+        }.stateIn(viewModelScope, SharingStarted.Lazily, EditGameState.OnLoading)
+
+
+    private fun createReadyGameState(result: ScheduleGameResult.GameAvailable) =
+        EditGameState.OnGameReady(
+            result.gameInfo.gameID.toString(),
+            formatGameDate(result.gameInfo.gameTime),
+            formatGameTime(result.gameInfo.gameTime),
+            getTeamScore(result.gameInfo),
+            getOpponentScore(result.gameInfo),
+            result.gameInfo.opponentName,
+            isOTL(result.gameInfo)
+        )
 
 
     private fun formatGameDate(gameTime: LocalDateTime?) : String{

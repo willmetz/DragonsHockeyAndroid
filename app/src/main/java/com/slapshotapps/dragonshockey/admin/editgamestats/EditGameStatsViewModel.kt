@@ -1,7 +1,9 @@
 package com.slapshotapps.dragonshockey.admin.editgamestats
 
 import androidx.lifecycle.ViewModel
+import com.slapshotapps.dragonshockey.di.GameID
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 
 sealed interface PlayerEditGameStats {
@@ -12,6 +14,9 @@ sealed interface PlayerEditGameStats {
 }
 
 @HiltViewModel
-class EditGameStatsViewModel : ViewModel() {
+class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int): ViewModel() {
 
+    init {
+        println("GameID = $gameID")
+    }
 }

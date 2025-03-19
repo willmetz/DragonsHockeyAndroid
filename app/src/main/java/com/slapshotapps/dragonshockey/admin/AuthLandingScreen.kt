@@ -21,7 +21,7 @@ import com.slapshotapps.dragonshockey.widgets.SingleButtonAlertDialog
 
 
 @Composable
-fun AuthLandingScreen(onEditGame: () -> Unit ,modifier: Modifier = Modifier, viewModel: AuthViewModel = hiltViewModel<AuthViewModel>()){
+fun AuthLandingScreen(gameID: Int, onEditGame: (Int) -> Unit ,modifier: Modifier = Modifier, viewModel: AuthViewModel = hiltViewModel<AuthViewModel>()){
     var userName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showErrorContent by remember { mutableStateOf(false) }
@@ -31,7 +31,7 @@ fun AuthLandingScreen(onEditGame: () -> Unit ,modifier: Modifier = Modifier, vie
     LaunchedEffect(Unit) {
         viewModel.authEvent.collect{
             when(it){
-                AuthEvents.OnAuthComplete -> onEditGame()
+                AuthEvents.OnAuthComplete -> onEditGame(gameID)
                 is AuthEvents.OnAuthError -> {
                     errorMsg = it.msg
                     errorTitle = it.title

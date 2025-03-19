@@ -32,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.slapshotapps.dragonshockey.admin.AuthLandingScreen
 import com.slapshotapps.dragonshockey.admin.editgame.EditGameScreen
 import com.slapshotapps.dragonshockey.home.screen.HomeScreen
@@ -46,30 +47,35 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
 
 
-@Serializable
-object Home
-@Serializable
-object Stats
-@Serializable
-object Roster
-@Serializable
-object Schedule
-@Serializable
-object Settings
 
-
-val bottomNavRoutes = listOf(
-    TopLevelRoutes("Home", Home,  R.drawable.home),
-    TopLevelRoutes("Stats", Stats, R.drawable.stats),
-    TopLevelRoutes("Roster", Roster, R.drawable.roster),
-    TopLevelRoutes("Schedule", Schedule, R.drawable.schedule)
- //   TopLevelRoutes("Settings", Settings, R.drawable.settings)
-)
-
-enum class SubNavRoutes(){
-    AdminLandingScreen,
-    AdminEditGameScreen
+interface BottomNavItem{
+    val name: String
+    val icon: Int
 }
+
+@Serializable
+sealed class AppScreen(val route: String){
+    @Serializable
+    data class Home(override val name: String = "Home", override val icon: Int = R.drawable.home) : AppScreen("Home"), BottomNavItem
+    @Serializable
+    data class Stats(override val name: String = "Stats", override val icon: Int = R.drawable.stats) : AppScreen("Stats"), BottomNavItem
+    @Serializable
+    data class Roster(override val name: String = "Roster", override val icon: Int = R.drawable.roster) : AppScreen("Roster"), BottomNavItem
+    @Serializable
+    data class Schedule(override val name: String = "Schedule", override val icon: Int = R.drawable.schedule) : AppScreen("Schedule"), BottomNavItem
+    @Serializable
+    data class AdminLanding(val gameID: Int) : AppScreen("AdminLanding")
+    @Serializable
+    data class AdminEditGame(val gameID: Int): AppScreen("AdminEditGame")
+}
+
+//@Serializable
+val bottomNavMenu : List<BottomNavItem> = listOf(
+    AppScreen.Home(),
+    AppScreen.Stats(),
+    AppScreen.Roster(),
+    AppScreen.Schedule(),
+)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -86,16 +92,22 @@ class MainActivity : ComponentActivity() {
                     },
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-                    NavHost(navController, startDestination = Home, Modifier.padding(innerPadding)){
+                    NavHost(navController, startDestination = AppScreen.Home(), Modifier.padding(innerPadding)){
 
-                        composable<Home> { HomeScreen() }
-                        composable<Roster> { RosterScreen() }
-                        composable<Schedule> { ScheduleScreen({ gameID -> navController.navigate(SubNavRoutes.AdminLandingScreen.name)}) }
-                        composable<Stats> { SeasonStatsScreen() }
-                        composable(route = SubNavRoutes.AdminLandingScreen.name ){
-                            AuthLandingScreen({ navController.navigate(SubNavRoutes.AdminEditGameScreen.name) })
+                        composable<AppScreen.Home> { HomeScreen() }
+                        composable<AppScreen.Roster> { RosterScreen() }
+                        composable<AppScreen.Schedule> { ScheduleScreen({ gameID -> navController.navigate(AppScreen.AdminLanding(gameID))}) }
+                        composable<AppScreen.Stats> { SeasonStatsScreen() }
+                        composable<AppScreen.AdminLanding>{
+                            val navEntry = it.toRoute<AppScreen.AdminLanding>()
+                            AuthLandingScreen(navEntry.gameID, {
+                                navController.navigate(AppScreen.AdminEditGame(it))
+                            })
                         }
-                        composable(route = SubNavRoutes.AdminEditGameScreen.name){ EditGameScreen() }
+                        composable<AppScreen.AdminEditGame>{
+                            val navEntry = it.toRoute<AppScreen.AdminEditGame>()
+                            it.arguments?.putInt("gameID", navEntry.gameID)
+                            EditGameScreen() }
                     }
                 }
             }
@@ -110,21 +122,21 @@ class MainActivity : ComponentActivity() {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
 
-            bottomNavRoutes.forEach { topLevelRoute ->
-                val selected = currentDestination?.route?.endsWith(topLevelRoute.name) == true
-                println("bottom nav state changed: Current Route = ${currentDestination?.route}  top level route = ${topLevelRoute.name}")
+            bottomNavMenu.forEach { route ->
+                val selected = currentDestination?.route?.startsWith("com.slapshotapps.dragonshockey.AppScreen.${route.name}") == true
+                println("bottom nav state changed: Current Route = ${currentDestination?.route}  top level route = ${route.name}")
                 BottomNavigationItem(
                     icon = {
                         Icon(
-                            ImageVector.vectorResource(topLevelRoute.iconResource),
-                            contentDescription = topLevelRoute.name,
+                            ImageVector.vectorResource(route.icon),
+                            contentDescription = route.name,
                             tint = if(selected) Color.Red else Color(0.98f, 0.68f, 0.68f)
                         )
                     },
-                    label = { Text(text = topLevelRoute.name, style = Typography.bodyMedium, color = Color.Black) },
+                    label = { Text(text = route.name, style = Typography.bodyMedium, color = Color.Black) },
                     selected = selected,
                     onClick = {
-                        navController.navigate(topLevelRoute.route) {
+                        navController.navigate(route) {
                             // Pop up to the start destination of the graph to
                             // avoid building up a large stack of destinations
                             // on the back stack as users select items

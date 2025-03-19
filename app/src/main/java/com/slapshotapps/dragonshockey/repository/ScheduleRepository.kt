@@ -5,14 +5,18 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
+import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
 import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
 import com.slapshotapps.dragonshockey.network.models.GameDTO
 import com.slapshotapps.dragonshockey.network.models.GameResultDTO
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -20,7 +24,7 @@ import kotlin.coroutines.resume
 
 interface ScheduleRepository {
     fun getSchedule(): Flow<ScheduleResult>
-    suspend fun getGame(gameID: Int) : ScheduleGameResult
+    fun getGame(gameID: Int) : Flow<ScheduleGameResult>
 }
 
 sealed interface ScheduleResult{
@@ -33,7 +37,9 @@ sealed interface ScheduleGameResult{
     data class GameAvailable(val gameInfo: Game) : ScheduleGameResult
 }
 
-class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val auth: AuthenticationManager) : ScheduleRepository{
+class ScheduleRepositoryImp(private val database: FirebaseDatabase,
+                            private val auth: AuthenticationManager,
+                            @IoDispatcher val ioDispatcher: CoroutineDispatcher) : ScheduleRepository{
 
     private val gson = Gson()
     private val gameTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -63,9 +69,11 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase, private  val
         }
     }
 
-    override suspend fun getGame(gameID: Int) : ScheduleGameResult {
-        auth.authenticateUserAnonymously()
-        return getSingleGameResult(gameID)
+    override fun getGame(gameID: Int) : Flow<ScheduleGameResult> {
+        return flow {
+            auth.authenticateUserAnonymously()
+            emit(getSingleGameResult(gameID))
+        }.flowOn(ioDispatcher)
     }
 
     private suspend fun getSingleGameResult(gameID: Int) = suspendCancellableCoroutine<ScheduleGameResult> { continuation ->
