@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.slapshotapps.dragonshockey.admin.AuthLandingScreen
 import com.slapshotapps.dragonshockey.admin.editgame.EditGameScreen
+import com.slapshotapps.dragonshockey.admin.editgamestats.EditGameStatsScreen
 import com.slapshotapps.dragonshockey.home.screen.HomeScreen
 import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
 import com.slapshotapps.dragonshockey.roster.RosterScreen
@@ -67,6 +68,8 @@ sealed class AppScreen(val route: String){
     data class AdminLanding(val gameID: Int) : AppScreen("AdminLanding")
     @Serializable
     data class AdminEditGame(val gameID: Int): AppScreen("AdminEditGame")
+    @Serializable
+    data class AdminEditStats(val gameID: Int): AppScreen("AdminEditStats")
 }
 
 //@Serializable
@@ -100,14 +103,22 @@ class MainActivity : ComponentActivity() {
                         composable<AppScreen.Stats> { SeasonStatsScreen() }
                         composable<AppScreen.AdminLanding>{
                             val navEntry = it.toRoute<AppScreen.AdminLanding>()
-                            AuthLandingScreen(navEntry.gameID, {
-                                navController.navigate(AppScreen.AdminEditGame(it))
+                            AuthLandingScreen(navEntry.gameID, {gameID ->
+                                navController.navigate(AppScreen.AdminEditGame(gameID))
                             })
                         }
                         composable<AppScreen.AdminEditGame>{
                             val navEntry = it.toRoute<AppScreen.AdminEditGame>()
                             it.arguments?.putInt("gameID", navEntry.gameID)
-                            EditGameScreen() }
+                            EditGameScreen({gameID ->
+                                navController.navigate(AppScreen.AdminEditStats(gameID))
+                            })
+                        }
+                        composable<AppScreen.AdminEditStats> {
+                            val navEntry = it.toRoute<AppScreen.AdminEditStats>()
+                            it.arguments?.putInt("gameID", navEntry.gameID)
+                            EditGameStatsScreen()
+                        }
                     }
                 }
             }

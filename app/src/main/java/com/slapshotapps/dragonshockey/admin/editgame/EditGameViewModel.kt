@@ -10,10 +10,12 @@ import com.slapshotapps.dragonshockey.repository.ScheduleGameResult
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,6 +32,10 @@ sealed interface EditGameState{
     data class OnError(val msg: String) : EditGameState
 }
 
+sealed interface EditGameEvent{
+    data class EditGameStats(val gameID: Int) : EditGameEvent
+}
+
 @HiltViewModel
 class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
                                             private val scheduleRepository: ScheduleRepository,
@@ -37,6 +43,9 @@ class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
 
     private val gameTimeFormater = DateTimeFormatter.ofPattern("h:mm a")
     private val gameDateFormater = DateTimeFormatter.ofPattern("EEE MMM d")
+
+    private val _editGameEventHandler = MutableSharedFlow<EditGameEvent>()
+    val editGameEventHandler : SharedFlow<EditGameEvent> = _editGameEventHandler.asSharedFlow()
 
     private val _gameState = MutableStateFlow<EditGameState>(EditGameState.OnLoading)
     val gameState : StateFlow<EditGameState> =
@@ -51,6 +60,11 @@ class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
             }
         }.stateIn(viewModelScope, SharingStarted.Lazily, EditGameState.OnLoading)
 
+    fun onEditGame(){
+        viewModelScope.launch {
+            _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+        }
+    }
 
     private fun createReadyGameState(result: ScheduleGameResult.GameAvailable) =
         EditGameState.OnGameReady(

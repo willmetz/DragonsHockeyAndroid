@@ -12,7 +12,11 @@ import com.slapshotapps.dragonshockey.network.models.GameStatsDTO
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+
+
 
 
 sealed interface SeasonStatsResult{
