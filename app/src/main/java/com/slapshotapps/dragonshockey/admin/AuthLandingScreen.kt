@@ -41,6 +41,10 @@ fun AuthLandingScreen(gameID: Int, onEditGame: (Int) -> Unit ,modifier: Modifier
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.checkIfAuthenticated()
+    }
+
     if(showErrorContent){
         SingleButtonAlertDialog(errorTitle, errorMsg, "OK") {
             showErrorContent = false

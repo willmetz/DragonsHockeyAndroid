@@ -55,21 +55,21 @@ interface BottomNavItem{
 }
 
 @Serializable
-sealed class AppScreen(val route: String){
+sealed class AppScreen(){
     @Serializable
-    data class Home(override val name: String = "Home", override val icon: Int = R.drawable.home) : AppScreen("Home"), BottomNavItem
+    data class Home(override val name: String = "Home", override val icon: Int = R.drawable.home) : AppScreen(), BottomNavItem
     @Serializable
-    data class Stats(override val name: String = "Stats", override val icon: Int = R.drawable.stats) : AppScreen("Stats"), BottomNavItem
+    data class Stats(override val name: String = "Stats", override val icon: Int = R.drawable.stats) : AppScreen(), BottomNavItem
     @Serializable
-    data class Roster(override val name: String = "Roster", override val icon: Int = R.drawable.roster) : AppScreen("Roster"), BottomNavItem
+    data class Roster(override val name: String = "Roster", override val icon: Int = R.drawable.roster) : AppScreen(), BottomNavItem
     @Serializable
-    data class Schedule(override val name: String = "Schedule", override val icon: Int = R.drawable.schedule) : AppScreen("Schedule"), BottomNavItem
+    data class Schedule(override val name: String = "Schedule", override val icon: Int = R.drawable.schedule) : AppScreen(), BottomNavItem
     @Serializable
-    data class AdminLanding(val gameID: Int) : AppScreen("AdminLanding")
+    data class AdminLanding(val gameID: Int) : AppScreen()
     @Serializable
-    data class AdminEditGame(val gameID: Int): AppScreen("AdminEditGame")
+    data class AdminEditGame(val gameID: Int): AppScreen()
     @Serializable
-    data class AdminEditStats(val gameID: Int): AppScreen("AdminEditStats")
+    data class AdminEditStats(val gameID: Int): AppScreen()
 }
 
 //@Serializable

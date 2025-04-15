@@ -60,7 +60,8 @@ class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
             }
         }.stateIn(viewModelScope, SharingStarted.Lazily, EditGameState.OnLoading)
 
-    fun onEditGame(){
+    fun onEditGame(teamScore: String, opponentScore: String, isOTL: Boolean){
+        println("score updates: teamScore = $teamScore, opponentScore = $opponentScore, otl = $isOTL")
         viewModelScope.launch {
             _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
         }

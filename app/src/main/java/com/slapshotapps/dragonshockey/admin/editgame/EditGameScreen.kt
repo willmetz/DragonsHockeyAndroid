@@ -32,13 +32,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
-import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun EditGameScreen(onEditStats: (Int) -> Unit, gameViewModel: EditGameViewModel = hiltViewModel<EditGameViewModel>()){
+fun EditGameScreen(onEditStats: (Int) -> Unit,
+                   gameViewModel: EditGameViewModel = hiltViewModel<EditGameViewModel>()){
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -53,7 +52,8 @@ fun EditGameScreen(onEditStats: (Int) -> Unit, gameViewModel: EditGameViewModel 
     gameViewModel.gameState.collectAsStateWithLifecycle().value.let {
         when(it){
             is EditGameState.OnError -> {}
-            is EditGameState.OnGameReady -> EditScreenContent(it) { gameViewModel.onEditGame() }
+            is EditGameState.OnGameReady -> EditScreenContent(it) { teamScore, opponentScore, isOTL ->
+                gameViewModel.onEditGame(teamScore, opponentScore, isOTL) }
             EditGameState.OnLoading -> ShowLoading()
         }
     }
@@ -90,8 +90,8 @@ fun ShowLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EditScreenContent(state: EditGameState.OnGameReady, onEditStats: () -> Unit){
-    var dragonsScore by remember { mutableStateOf(state.teamScore) }
+fun EditScreenContent(state: EditGameState.OnGameReady, onEditStats: (String, String, Boolean) -> Unit){
+    var teamScore by remember { mutableStateOf(state.teamScore) }
     var opponentScore by remember { mutableStateOf(state.opponentScore) }
     var isOtlLoss by remember { mutableStateOf(state.isOTL) }
 
@@ -103,15 +103,15 @@ fun EditScreenContent(state: EditGameState.OnGameReady, onEditStats: () -> Unit)
         GameLabel("Game Time: ${state.gameTime}")
         Spacer(Modifier.height(8.dp))
 
-        TextField(dragonsScore, label = {
+        TextField(teamScore, label = {
             Text("Dragons Score")
-        }, onValueChange = {},
+        }, onValueChange = { teamScore = it },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp, start = 8.dp, end = 8.dp))
 
         TextField(opponentScore, label = {
             Text("${state.opponent} score")
-        }, onValueChange = {},
+        }, onValueChange = {opponentScore = it},
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp))
 
@@ -119,7 +119,9 @@ fun EditScreenContent(state: EditGameState.OnGameReady, onEditStats: () -> Unit)
 
         Column(horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Button(onEditStats) {
+            Button({
+                onEditStats(teamScore, opponentScore, isOtlLoss)
+            }) {
                 Text("Edit Stats")
             }
         }
@@ -148,7 +150,7 @@ fun isOTL(isChecked: Boolean, label: String, onChecked: (Boolean) -> Unit){
 @Composable
 fun PreviewForEditGame(){
     EditGameState.OnGameReady("12", "12/2/25", "8:00 pm", "3", "0", "Benders", false).let {
-        EditScreenContent(it, {})
+        EditScreenContent(it) { _, _, _ -> }
     }
 }
 
