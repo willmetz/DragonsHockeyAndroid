@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
 interface GameResultRepository {
     fun getSeasonRecord(): Flow<SeasonRecordResult>
@@ -29,7 +30,7 @@ sealed interface GameResults{
     //data class HasResults( val results: )
 }
 
-class GameResultRepositoryImp(private val database: FirebaseDatabase, private  val auth: AuthenticationManager) : GameResultRepository{
+class GameResultRepositoryImp @Inject constructor(private val database: FirebaseDatabase, private  val auth: AuthenticationManager) : GameResultRepository{
 
     private val gson = Gson()
 

@@ -32,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import androidx.navigation.toRoute
 import com.slapshotapps.dragonshockey.admin.AuthLandingScreen
 import com.slapshotapps.dragonshockey.admin.editgame.EditGameScreen
@@ -104,7 +105,9 @@ class MainActivity : ComponentActivity() {
                         composable<AppScreen.AdminLanding>{
                             val navEntry = it.toRoute<AppScreen.AdminLanding>()
                             AuthLandingScreen(navEntry.gameID, {gameID ->
-                                navController.navigate(AppScreen.AdminEditGame(gameID))
+                                navController.navigate(AppScreen.AdminEditGame(gameID), navOptions {
+                                    popUpTo<AppScreen.AdminLanding> { inclusive = true }
+                                })
                             })
                         }
                         composable<AppScreen.AdminEditGame>{

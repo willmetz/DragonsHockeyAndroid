@@ -6,6 +6,7 @@ import com.slapshotapps.dragonshockey.di.GameID
 import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
+import com.slapshotapps.dragonshockey.repository.AdminRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleGameResult
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,8 +38,9 @@ sealed interface EditGameEvent{
 }
 
 @HiltViewModel
-class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
+class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
                                             private val scheduleRepository: ScheduleRepository,
+                                            private val adminRepository: AdminRepository,
                                             @IoDispatcher private val ioDispatcher: CoroutineDispatcher): ViewModel() {
 
     private val gameTimeFormater = DateTimeFormatter.ofPattern("h:mm a")
@@ -63,6 +65,8 @@ class EditGameViewModel @Inject constructor(@GameID val gameID: Int,
     fun onEditGame(teamScore: String, opponentScore: String, isOTL: Boolean){
         println("score updates: teamScore = $teamScore, opponentScore = $opponentScore, otl = $isOTL")
         viewModelScope.launch {
+            adminRepository.onUpdateGameResult(teamScore, opponentScore, isOTL, gameID)
+
             _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
         }
     }

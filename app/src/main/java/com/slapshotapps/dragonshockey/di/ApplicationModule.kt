@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.database
+import com.slapshotapps.dragonshockey.repository.AdminRepository
+import com.slapshotapps.dragonshockey.repository.AdminRepositoryImp
 import com.slapshotapps.dragonshockey.repository.AuthenticationManager
 import com.slapshotapps.dragonshockey.repository.AuthenticationManagerImp
 import com.slapshotapps.dragonshockey.repository.GameResultRepository
@@ -57,5 +59,7 @@ class ApplicationModule {
     @Provides
     fun providesMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
+    @Provides
+    fun providesAdminRepo(database: FirebaseDatabase) : AdminRepository = AdminRepositoryImp(database)
 
 }
