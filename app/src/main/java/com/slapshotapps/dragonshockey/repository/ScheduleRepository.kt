@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
+import com.slapshotapps.dragonshockey.constants.DATABASE_SCHEDULE_KEY
 import com.slapshotapps.dragonshockey.di.IoDispatcher
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
 import com.slapshotapps.dragonshockey.models.Game
@@ -61,10 +62,10 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase,
                 }
             }
 
-            database.getReference("games").addValueEventListener(postListener)
+            database.getReference(DATABASE_SCHEDULE_KEY).addValueEventListener(postListener)
 
             awaitClose {
-                database.getReference("games").removeEventListener(postListener)
+                database.getReference(DATABASE_SCHEDULE_KEY).removeEventListener(postListener)
             }
         }
     }
@@ -82,12 +83,12 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase,
                 dataSnapshot.toList<GameDTO>(gson).takeIf { it.isNotEmpty() }?.firstOrNull{it?.gameID == gameID}?.let { gameDTO ->
                     continuation.takeIf { it.isActive }?.resume(ScheduleGameResult.GameAvailable(toGame(gameDTO)))
                 }
-                database.getReference("games").removeEventListener(this)
+                database.getReference(DATABASE_SCHEDULE_KEY).removeEventListener(this)
             }
 
             override fun onCancelled(p0: DatabaseError) {
                 continuation.takeIf { it.isActive }?.resume(ScheduleGameResult.GameUnavailable)
-                database.getReference("games").removeEventListener(this)
+                database.getReference(DATABASE_SCHEDULE_KEY).removeEventListener(this)
             }
 
         })

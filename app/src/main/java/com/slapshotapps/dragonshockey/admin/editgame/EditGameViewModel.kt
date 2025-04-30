@@ -64,11 +64,19 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
 
     fun onEditGame(teamScore: String, opponentScore: String, isOTL: Boolean){
         println("score updates: teamScore = $teamScore, opponentScore = $opponentScore, otl = $isOTL")
-        viewModelScope.launch {
-            adminRepository.onUpdateGameResult(teamScore, opponentScore, isOTL, gameID)
+        val teamScoreInteger = teamScore.toIntOrNull()
+        val opponentScoreInteger = opponentScore.toIntOrNull()
 
-            _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+        if( teamScoreInteger == null || opponentScoreInteger == null){
+            //error
+        }else{
+            viewModelScope.launch {
+                adminRepository.onUpdateGameResult(teamScoreInteger, opponentScoreInteger, isOTL, gameID)
+
+                _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+            }
         }
+
     }
 
     private fun createReadyGameState(result: ScheduleGameResult.GameAvailable) =

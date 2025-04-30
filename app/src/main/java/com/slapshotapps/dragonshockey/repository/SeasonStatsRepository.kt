@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
+import com.slapshotapps.dragonshockey.constants.DATABASE_GAME_STATS_KEY
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
 import com.slapshotapps.dragonshockey.models.GameStats
 import com.slapshotapps.dragonshockey.models.PlayerGameStats
@@ -48,10 +49,10 @@ class SeasonStatsRepositoryImp @Inject constructor(private val database: Firebas
                 }
             }
 
-            database.getReference("gameStats").addValueEventListener(postListener)
+            database.getReference(DATABASE_GAME_STATS_KEY).addValueEventListener(postListener)
 
             awaitClose{
-                database.getReference("gameStats").removeEventListener(postListener)
+                database.getReference(DATABASE_GAME_STATS_KEY).removeEventListener(postListener)
             }
         }
     }

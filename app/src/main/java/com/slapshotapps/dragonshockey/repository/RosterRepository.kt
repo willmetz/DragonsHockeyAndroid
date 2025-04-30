@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
+import com.slapshotapps.dragonshockey.constants.DATABASE_ROSTER_KEY
 import com.slapshotapps.dragonshockey.extensions.firebase.toList
 import com.slapshotapps.dragonshockey.models.Player
 import com.slapshotapps.dragonshockey.models.PlayerPosition
@@ -51,10 +52,10 @@ class RosterRepositoryImp @Inject constructor(private val database: FirebaseData
                 }
             }
 
-            database.getReference("roster").addValueEventListener(postListener)
+            database.getReference(DATABASE_ROSTER_KEY).addValueEventListener(postListener)
 
             awaitClose{
-                database.getReference("roster").removeEventListener(postListener)
+                database.getReference(DATABASE_ROSTER_KEY).removeEventListener(postListener)
             }
         }
     }
