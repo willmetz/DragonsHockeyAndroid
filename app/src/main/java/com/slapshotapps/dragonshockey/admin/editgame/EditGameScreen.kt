@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
+import com.slapshotapps.dragonshockey.widgets.SingleButtonAlertDialog
 
 
 @Composable
@@ -40,21 +41,37 @@ fun EditGameScreen(onEditStats: (Int) -> Unit,
                    gameViewModel: EditGameViewModel = hiltViewModel<EditGameViewModel>()){
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var showErrorContent by remember { mutableStateOf(false) }
+    var errorMsg by remember { mutableStateOf("") }
+    var errorTitle by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         gameViewModel.editGameEventHandler.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect{
             when(it){
                 is EditGameEvent.EditGameStats -> onEditStats(it.gameID)
+                is EditGameEvent.OnError -> {
+                    errorMsg = it.msg
+                    errorTitle = it.title
+                    showErrorContent = true
+                }
             }
         }
     }
 
     gameViewModel.gameState.collectAsStateWithLifecycle().value.let {
         when(it){
-            is EditGameState.OnError -> {}
+            is EditGameState.OnError -> {
+                //todo
+            }
             is EditGameState.OnGameReady -> EditScreenContent(it) { teamScore, opponentScore, isOTL ->
                 gameViewModel.onEditGame(teamScore, opponentScore, isOTL) }
             EditGameState.OnLoading -> ShowLoading()
+        }
+    }
+
+    if(showErrorContent){
+        SingleButtonAlertDialog(errorTitle, errorMsg, "OK") {
+            showErrorContent = false
         }
     }
 }

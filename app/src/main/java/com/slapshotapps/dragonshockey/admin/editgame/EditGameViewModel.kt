@@ -35,7 +35,9 @@ sealed interface EditGameState{
 
 sealed interface EditGameEvent{
     data class EditGameStats(val gameID: Int) : EditGameEvent
+    data class OnError(val msg: String, val title: String) : EditGameEvent
 }
+
 
 @HiltViewModel
 class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
@@ -49,9 +51,11 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
     private val _editGameEventHandler = MutableSharedFlow<EditGameEvent>()
     val editGameEventHandler : SharedFlow<EditGameEvent> = _editGameEventHandler.asSharedFlow()
 
-    private val _gameState = MutableStateFlow<EditGameState>(EditGameState.OnLoading)
+    private var originalResult : ScheduleGameResult = ScheduleGameResult.GameUnavailable
+
     val gameState : StateFlow<EditGameState> =
         scheduleRepository.getGame(gameID).map { result ->
+            originalResult = result
             when(result){
                 is ScheduleGameResult.GameAvailable -> {
                     createReadyGameState(result)
@@ -62,21 +66,39 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
             }
         }.stateIn(viewModelScope, SharingStarted.Lazily, EditGameState.OnLoading)
 
-    fun onEditGame(teamScore: String, opponentScore: String, isOTL: Boolean){
+    fun onEditGame(teamScore: String, opponentScore: String, isOTL: Boolean) {
         println("score updates: teamScore = $teamScore, opponentScore = $opponentScore, otl = $isOTL")
+
         val teamScoreInteger = teamScore.toIntOrNull()
         val opponentScoreInteger = opponentScore.toIntOrNull()
 
-        if( teamScoreInteger == null || opponentScoreInteger == null){
-            //error
-        }else{
-            viewModelScope.launch {
-                adminRepository.onUpdateGameResult(teamScoreInteger, opponentScoreInteger, isOTL, gameID)
+        viewModelScope.launch {
+            when {
+                teamScoreInteger == null || opponentScoreInteger == null -> {
+                    _editGameEventHandler.emit(EditGameEvent.OnError(
+                        "Team score and Opponent Score are required", "Invalid Input"))
+                }
+                didGameInfoChange(teamScoreInteger, opponentScoreInteger, isOTL) -> {
+                    adminRepository.onUpdateGameResult(teamScoreInteger, opponentScoreInteger, isOTL, gameID)
+                    _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+                }
 
-                _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+                else -> _editGameEventHandler.emit(EditGameEvent.EditGameStats(gameID))
+
             }
-        }
 
+        }
+    }
+
+    private fun didGameInfoChange(teamScore: Int, opponentScore: Int, isOTL: Boolean) : Boolean {
+        return when(val original = originalResult){
+            is ScheduleGameResult.GameAvailable -> {
+                teamScore != getTeamScore(original.gameInfo).toIntOrNull() ||
+                        opponentScore != getOpponentScore(original.gameInfo).toIntOrNull() ||
+                         isOTL != isOTL(original.gameInfo)
+            }
+            ScheduleGameResult.GameUnavailable -> true
+        }
     }
 
     private fun createReadyGameState(result: ScheduleGameResult.GameAvailable) =
