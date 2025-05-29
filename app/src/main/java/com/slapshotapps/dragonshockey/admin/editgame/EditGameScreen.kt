@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
+import com.slapshotapps.dragonshockey.ui.theme.Typography
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 import com.slapshotapps.dragonshockey.widgets.SingleButtonAlertDialog
 
@@ -60,9 +62,7 @@ fun EditGameScreen(onEditStats: (Int) -> Unit,
 
     gameViewModel.gameState.collectAsStateWithLifecycle().value.let {
         when(it){
-            is EditGameState.OnError -> {
-                //todo
-            }
+            is EditGameState.OnError -> ShowError(it.msg)
             is EditGameState.OnGameReady -> EditScreenContent(it) { teamScore, opponentScore, isOTL ->
                 gameViewModel.onEditGame(teamScore, opponentScore, isOTL) }
             EditGameState.OnLoading -> ShowLoading()
@@ -77,7 +77,14 @@ fun EditGameScreen(onEditStats: (Int) -> Unit,
 }
 
 @Composable
-fun ShowLoading(modifier: Modifier = Modifier) {
+private fun ShowError(errorMsg: String, modifier: Modifier = Modifier){
+    Box(modifier.then(Modifier.fillMaxSize()), contentAlignment = Alignment.Center){
+        Text(errorMsg, textAlign = TextAlign.Center, style = Typography.titleLarge, color = Color.Red)
+    }
+}
+
+@Composable
+private fun ShowLoading(modifier: Modifier = Modifier) {
     Column(modifier.then(Modifier.fillMaxSize())) {
         Box(
             Modifier
@@ -169,5 +176,11 @@ fun PreviewForEditGame(){
     EditGameState.OnGameReady("12", "12/2/25", "8:00 pm", "3", "0", "Benders", false).let {
         EditScreenContent(it) { _, _, _ -> }
     }
+}
+
+@Preview
+@Composable
+private fun PreviewForError(){
+    ShowError("This is an error")
 }
 
