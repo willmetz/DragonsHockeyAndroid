@@ -28,9 +28,9 @@ sealed interface EditGameUiState {
 
 sealed class PlayerEditGameStats(val playerID: Int) {
     data class SkaterStats(val name: String, val position: String, val goals: String,
-                           val assists: String, val penaltyMins: String, val id: Int) : PlayerEditGameStats(id)
+                           val assists: String, val penaltyMins: String, val present: Boolean, val id: Int) : PlayerEditGameStats(id)
     data class GoalieStats(val name: String, val goalsAgainst: String, val assists: String,
-                           val penaltyMins: String, val id: Int)  : PlayerEditGameStats(id)
+                           val penaltyMins: String, val present: Boolean, val id: Int)  : PlayerEditGameStats(id)
 }
 
 @HiltViewModel
@@ -56,7 +56,11 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
                                     PlayerPosition.Goalie -> buildGoalieStats(player, stats)
                                 }
                             }
-                        }.let { EditGameUiState.HasStats(it) }
+                        }.sortedBy { when(it){
+                            is PlayerEditGameStats.GoalieStats -> it.name.split(" ").last()
+                            is PlayerEditGameStats.SkaterStats -> it.name.split(" ").last()
+                        } }.let { EditGameUiState.HasStats(it) }
+
                     }
                     is SingleGameStats.NoStatsForGame -> {
                         gameStats.players.map { player ->
@@ -91,7 +95,7 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
                                   currentStats: List<PlayerEditGameStats>) : List<PlayerEditGameStats> {
         return currentStats.map {
             if (updatedStats.playerID == (it as? PlayerEditGameStats.GoalieStats)?.playerID){
-                it.copy(goalsAgainst = updatedStats.goalsAgainst, assists = updatedStats.assists, penaltyMins = updatedStats.penaltyMins)
+                it.copy(goalsAgainst = updatedStats.goalsAgainst, assists = updatedStats.assists, penaltyMins = updatedStats.penaltyMins, present = updatedStats.present)
             }else it
         }
     }
@@ -101,7 +105,7 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
 
         return currentStats.map {
             if (updatedStats.playerID == (it as? PlayerEditGameStats.SkaterStats)?.playerID){
-                it.copy(goals = updatedStats.goals, assists = updatedStats.assists, penaltyMins = updatedStats.penaltyMins)
+                it.copy(goals = updatedStats.goals, assists = updatedStats.assists, penaltyMins = updatedStats.penaltyMins, present = updatedStats.present)
             }else it
         }
     }
@@ -111,6 +115,7 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
             stats?.goals?.toString() ?: "0",
             stats?.assists?.toString() ?: "0",
             stats?.penaltyMinutes?.toString() ?: "0",
+            stats?.gamePlayed == true,
             player.playerID)
     }
 
@@ -119,6 +124,7 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
             stats?.goalsAgainst?.toString()?: "0",
             stats?.assists?.toString()?:"0",
             stats?.penaltyMinutes?.toString() ?: "0",
+            stats?.gamePlayed == true,
             goalie.playerID)
     }
 
