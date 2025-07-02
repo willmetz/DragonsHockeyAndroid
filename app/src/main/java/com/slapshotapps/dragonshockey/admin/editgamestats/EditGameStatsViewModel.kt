@@ -6,6 +6,7 @@ import com.slapshotapps.dragonshockey.di.GameID
 import com.slapshotapps.dragonshockey.models.Player
 import com.slapshotapps.dragonshockey.models.PlayerGameStats
 import com.slapshotapps.dragonshockey.models.PlayerPosition
+import com.slapshotapps.dragonshockey.repository.AdminRepository
 import com.slapshotapps.dragonshockey.usecases.SingleGameStats
 import com.slapshotapps.dragonshockey.usecases.SingleGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +36,8 @@ sealed class PlayerEditGameStats(val playerID: Int) {
 
 @HiltViewModel
 class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
-                                                 private val singleGameUseCase: SingleGameUseCase): ViewModel() {
+                                                 private val singleGameUseCase: SingleGameUseCase,
+                                                 private val adminRepository: AdminRepository): ViewModel() {
 
 
     private val _gameInfo : MutableStateFlow<EditGameUiState> = MutableStateFlow(EditGameUiState.Loading)
@@ -77,6 +79,14 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
         }
     }
 
+    fun onSaveStats(){
+        viewModelScope.launch {
+            (gameInfo.value as? EditGameUiState.HasStats)?.let { gameData ->
+                adminRepository.onUpdateGameStats(gameID, gameData.players)
+            }
+        }
+    }
+
 
     fun onStatsUpdated(stats: PlayerEditGameStats){
         val currentInfo = gameInfo.value
@@ -88,7 +98,6 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
                 }
             _gameInfo.value = EditGameUiState.HasStats(updatedStats)
         }
-
     }
 
     private fun updateGoalieStats(updatedStats: PlayerEditGameStats.GoalieStats,

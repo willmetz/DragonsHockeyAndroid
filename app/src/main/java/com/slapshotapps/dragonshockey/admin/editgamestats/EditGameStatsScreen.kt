@@ -1,6 +1,6 @@
 package com.slapshotapps.dragonshockey.admin.editgamestats
 
-import android.widget.ToggleButton
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldColors
@@ -56,8 +57,22 @@ fun EditGameStatsScreen(viewModel: EditGameStatsViewModel = hiltViewModel()){
 
     when(val data = viewModel.gameInfo.collectAsStateWithLifecycle().value){
         is EditGameUiState.ErrorLoadingData -> ShowError(data.message)
-        is EditGameUiState.HasStats -> PlayerList(data.players, viewModel::onStatsUpdated)
+        is EditGameUiState.HasStats -> {
+            HasGameStats(viewModel::onSaveStats, viewModel::onStatsUpdated, data)
+        }
         EditGameUiState.Loading -> ShowLoading()
+    }
+}
+
+@Composable
+private fun HasGameStats(onSaveStats: () -> Unit,
+                         onStatsUpdated: (PlayerEditGameStats) -> Unit,
+                         data: EditGameUiState.HasStats) {
+    Column (Modifier.fillMaxSize()) {
+        Button(onClick = { onSaveStats() }, Modifier.align(Alignment.CenterHorizontally)) {
+            Text("Save Stats")
+        }
+        PlayerList(data.players, onStatsUpdated)
     }
 }
 
@@ -214,6 +229,19 @@ private fun StatsTextField(label: String, keyboardOptions: KeyboardOptions,
         interactionSource = interactionSource)
 }
 
+@Preview
+@Composable
+private fun GameStatsPreview(){
+    val players = mutableListOf<PlayerEditGameStats>()
+    players.add(PlayerEditGameStats.SkaterStats("Steve Yzerman", "Forward", "36",  "27", "0", true, 0))
+    players.add(PlayerEditGameStats.SkaterStats("Brendan Shanahan", "Forward", "25",  "12", "45", false, 1))
+    players.add(PlayerEditGameStats.SkaterStats("Dylan Larkin", "Forward", "10",  "1", "2", true,2))
+    players.add(PlayerEditGameStats.SkaterStats("Kirk Maltby", "Forward", "0",  "5", "18", false,3))
+    players.add(PlayerEditGameStats.SkaterStats("Kris Draper", "Forward", "0",  "0", "0", true,4))
+    players.add(PlayerEditGameStats.GoalieStats("Chris Osgood", "0", "1",  "2", true, 5))
+
+    HasGameStats({}, {}, EditGameUiState.HasStats(players))
+}
 
 @Preview
 @Composable
