@@ -1,11 +1,9 @@
 package com.slapshotapps.dragonshockey.roster
 
 
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.text.toUpperCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.slapshotapps.dragonshockey.extensions.string.titleCase
+import com.slapshotapps.dragonshockey.extensions.primitives.titleCase
 import com.slapshotapps.dragonshockey.models.Player
 import com.slapshotapps.dragonshockey.models.PlayerPosition
 import com.slapshotapps.dragonshockey.repository.RosterRepository

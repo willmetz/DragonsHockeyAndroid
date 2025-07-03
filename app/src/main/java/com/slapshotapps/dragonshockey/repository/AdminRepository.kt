@@ -1,13 +1,13 @@
 package com.slapshotapps.dragonshockey.repository
 
+import androidx.annotation.Keep
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
-import com.google.gson.annotations.SerializedName
 import com.slapshotapps.dragonshockey.admin.editgamestats.PlayerEditGameStats
 import com.slapshotapps.dragonshockey.constants.DATABASE_GAME_RESULT_KEY
 import com.slapshotapps.dragonshockey.constants.DATABASE_GAME_STATS_KEY
-import com.slapshotapps.dragonshockey.network.models.GameResultDTO
+import com.slapshotapps.dragonshockey.extensions.primitives.toIntOrZero
 import kotlinx.coroutines.isActive
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -38,10 +38,40 @@ class AdminRepositoryImp @Inject constructor(private val database: FirebaseDatab
 
         //see if the game ID exists
         if(gameStatsKey != null){
-            //existing results need to be updated
+            updateExistingGameStats(gameID, updatedStats, gameStatsKey)
         }else{
-            //new results need to be added
+            addNewGameStats(gameID, updatedStats)
         }
+    }
+
+    @Keep
+    data class GameStatsDatabaseObject(val gameID: Int, val stats: List<StatsDatabaseObject>)
+    @Keep
+    data class StatsDatabaseObject(val assists: Int, val goals: Int, val goalsAgainst: Int,
+                                         val penaltyMinutes: Int, val playerID: Int, val present: Boolean)
+
+    private fun buildDBStatsObject(gameID: Int, updatedStats: List<PlayerEditGameStats>): GameStatsDatabaseObject{
+        return GameStatsDatabaseObject(gameID, updatedStats.map {
+            when(it){
+                is PlayerEditGameStats.GoalieStats -> StatsDatabaseObject(it.assists.toIntOrZero(),
+                    0, it.goalsAgainst.toIntOrZero(), it.penaltyMins.toIntOrNull() ?:0,
+                    it.playerID, it.present)
+                is PlayerEditGameStats.SkaterStats -> StatsDatabaseObject(it.assists.toIntOrZero(),
+                    it.goals.toIntOrZero(), 0, it.penaltyMins.toIntOrZero(),
+                    it.playerID, it.present)
+            }
+        })
+    }
+
+
+    private fun addNewGameStats(gameID: Int, updatedStats: List<PlayerEditGameStats>){
+        database.reference.child(DATABASE_GAME_STATS_KEY).apply {
+            push().key?.let {key -> this.child(key).setValue(buildDBStatsObject(gameID, updatedStats)) }
+        }
+    }
+
+    private fun updateExistingGameStats(gameID: Int, updatedStats: List<PlayerEditGameStats>, key: String){
+        database.reference.child(DATABASE_GAME_STATS_KEY).child(key).setValue(buildDBStatsObject(gameID, updatedStats))
     }
 
 
@@ -54,7 +84,9 @@ class AdminRepositoryImp @Inject constructor(private val database: FirebaseDatab
         }
     }
 
+    @Keep
     data class GameResultDatabaseObject(val dragonsScore: Int?, val gameID: Int?, val opponentScore: Int?, val overtimeLoss: Boolean?)
+    
     private fun addNewResult(teamScore: Int, opponentScore: Int, overtimeLoss: Boolean, gameID: Int){
         val result = GameResultDatabaseObject(teamScore, gameID, opponentScore, overtimeLoss)
 
