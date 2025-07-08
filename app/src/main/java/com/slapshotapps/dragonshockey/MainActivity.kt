@@ -114,13 +114,20 @@ class MainActivity : ComponentActivity() {
                             val navEntry = it.toRoute<AppScreen.AdminEditGame>()
                             it.arguments?.putInt("gameID", navEntry.gameID)
                             EditGameScreen({gameID ->
-                                navController.navigate(AppScreen.AdminEditStats(gameID))
+                                navController.navigate(AppScreen.AdminEditStats(gameID), navOptions {
+                                    popUpTo<AppScreen.AdminLanding>{ inclusive = true }
+                                })
                             })
                         }
                         composable<AppScreen.AdminEditStats> {
                             val navEntry = it.toRoute<AppScreen.AdminEditStats>()
                             it.arguments?.putInt("gameID", navEntry.gameID)
-                            EditGameStatsScreen()
+                            EditGameStatsScreen(onStatsUpdate = {
+                                val navEntry = it.toRoute<AppScreen.Schedule>()
+                                navController.navigate(navEntry, navOptions {
+                                    popUpTo<AppScreen.Schedule>{ inclusive = false }
+                                })
+                            })
                         }
                     }
                 }

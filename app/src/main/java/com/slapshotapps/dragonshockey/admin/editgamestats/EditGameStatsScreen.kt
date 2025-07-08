@@ -43,16 +43,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slapshotapps.dragonshockey.ui.theme.Typography
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
+import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun EditGameStatsScreen(viewModel: EditGameStatsViewModel = hiltViewModel()){
+fun EditGameStatsScreen(viewModel: EditGameStatsViewModel = hiltViewModel(), onStatsUpdate : () -> Unit){
 
     LaunchedEffect(null) {
         viewModel.fetchData()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collectLatest {
+            when(it){
+                EditGameStatsEffect.onStatsUpdated -> onStatsUpdate()
+            }
+        }
     }
 
     when(val data = viewModel.gameInfo.collectAsStateWithLifecycle().value){
@@ -62,6 +72,8 @@ fun EditGameStatsScreen(viewModel: EditGameStatsViewModel = hiltViewModel()){
         }
         EditGameUiState.Loading -> ShowLoading()
     }
+
+
 }
 
 @Composable

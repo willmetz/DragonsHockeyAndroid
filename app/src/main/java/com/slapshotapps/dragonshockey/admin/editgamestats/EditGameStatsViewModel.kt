@@ -10,9 +10,11 @@ import com.slapshotapps.dragonshockey.repository.AdminRepository
 import com.slapshotapps.dragonshockey.usecases.SingleGameStats
 import com.slapshotapps.dragonshockey.usecases.SingleGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -25,6 +27,10 @@ sealed interface EditGameUiState {
     data object Loading : EditGameUiState
     data class ErrorLoadingData(val message: String) : EditGameUiState
     data class HasStats(val players: List<PlayerEditGameStats>) : EditGameUiState
+}
+
+sealed interface EditGameStatsEffect{
+    data object onStatsUpdated : EditGameStatsEffect
 }
 
 sealed class PlayerEditGameStats(val playerID: Int) {
@@ -43,6 +49,8 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
     private val _gameInfo : MutableStateFlow<EditGameUiState> = MutableStateFlow(EditGameUiState.Loading)
     val gameInfo: StateFlow<EditGameUiState> = _gameInfo.asStateFlow()
 
+    private val _effect = MutableSharedFlow<EditGameStatsEffect>(replay = 0)
+    val effect = _effect.asSharedFlow()
 
     fun fetchData(){
         viewModelScope.launch {
@@ -84,6 +92,7 @@ class EditGameStatsViewModel @Inject constructor(@GameID val gameID: Int,
             (gameInfo.value as? EditGameUiState.HasStats)?.let { gameData ->
                 adminRepository.onUpdateGameStats(gameID, gameData.players)
             }
+            _effect.emit(EditGameStatsEffect.onStatsUpdated)
         }
     }
 
