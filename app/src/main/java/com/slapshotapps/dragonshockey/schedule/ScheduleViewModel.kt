@@ -4,14 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
-import com.slapshotapps.dragonshockey.repository.ScheduleRepository
-import com.slapshotapps.dragonshockey.repository.ScheduleResult
+import com.slapshotapps.dragonshockey.usecases.ScheduleGame
+import com.slapshotapps.dragonshockey.usecases.ScheduleUseCaseResult
+import com.slapshotapps.dragonshockey.usecases.ScheduleWithResultsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -34,36 +34,50 @@ sealed interface ScheduleScreenState{
 
 
 @HiltViewModel
-class ScheduleViewModel @Inject constructor(scheduleRepository: ScheduleRepository) : ViewModel() {
+class ScheduleViewModel @Inject constructor(useCase: ScheduleWithResultsUseCase) : ViewModel() {
 
     private val gameTimeFormater = DateTimeFormatter.ofPattern("h:mm a")
     private val gameDateFormater = DateTimeFormatter.ofPattern("EEE MMM d")
 
-    val scheduleState : StateFlow<ScheduleScreenState> = scheduleRepository.getSchedule().map {resultData ->
+    val scheduleState : StateFlow<ScheduleScreenState> = useCase.getScheduleWithResults().map {resultData ->
         when(resultData){
-            is ScheduleResult.HasSchedule -> {
-                resultData.seasonSchedule.sortedBy { it.gameTime }.map { convertToScheduleElement(it) }.let { data ->
-                    ScheduleScreenState.HasSchedule(data)
+            ScheduleUseCaseResult.Error -> {
+                ScheduleScreenState.NoScheduleAvailable("Unable to retrieve schedule. Please try again.")
+            }
+            is ScheduleUseCaseResult.Success -> {
+                if (resultData.games.isEmpty()) {
+                    ScheduleScreenState.NoScheduleAvailable("No games scheduled at this time.")
+                } else {
+                    val scheduleElements = resultData.games.sortedBy { it.game.gameTime }.map { game ->
+                        when (game) {
+                            is ScheduleGame.GameWithResult -> convertToScheduleElementWithResult(game)
+                            is ScheduleGame.GameWithoutResult -> convertToScheduleElementWithNoResult(game)
+                        }
+                    }
+                    ScheduleScreenState.HasSchedule(scheduleElements)
                 }
             }
-            ScheduleResult.NoScheduleAvailable -> ScheduleScreenState.NoScheduleAvailable("")
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, ScheduleScreenState.Loading)
 
 
 
-    private fun convertToScheduleElement(game: Game) : ScheduleElement{
-        val gameDate = game.gameTime?.let { gameDateFormater.format(it) } ?: "Unknown Date"
-        val gameTime = game.gameTime?.let { gameTimeFormater.format(it) } ?: "Unknown Time"
-        game.gameID
+    private fun convertToScheduleElementWithResult(scheduleItem: ScheduleGame.GameWithResult) : ScheduleElement{
+        val gameDate = scheduleItem.game.gameTime?.let { gameDateFormater.format(it) } ?: "Unknown Date"
+        val gameTime = scheduleItem.game.gameTime?.let { gameTimeFormater.format(it) } ?: "Unknown Time"
+        scheduleItem.game.gameID
 
-        return when(game.result){
-            GameResultData.UnknownResult -> {
-                ScheduleElement.Game(gameDate, gameTime, game.opponentName, game.isHome, game.gameID)
-            }
-            else -> {
-                ScheduleElement.GameWithResult(gameDate, gameTime, game.opponentName, game.isHome, game.gameID, game.result)
-            }
-        }
+        return ScheduleElement.GameWithResult(gameDate, gameTime, scheduleItem.game.opponentName,
+            scheduleItem.game.isHome, scheduleItem.game.gameID, scheduleItem.result)
+
+
+    }
+
+    private fun convertToScheduleElementWithNoResult(scheduleItem: ScheduleGame.GameWithoutResult) : ScheduleElement{
+        val gameDate = scheduleItem.game.gameTime?.let { gameDateFormater.format(it) } ?: "Unknown Date"
+        val gameTime = scheduleItem.game.gameTime?.let { gameTimeFormater.format(it) } ?: "Unknown Time"
+        scheduleItem.game.gameID
+
+        return ScheduleElement.Game(gameDate, gameTime, scheduleItem.game.opponentName, scheduleItem.game.isHome, scheduleItem.game.gameID)
     }
 }

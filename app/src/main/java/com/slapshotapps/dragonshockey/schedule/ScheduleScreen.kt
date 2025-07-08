@@ -120,7 +120,7 @@ private fun GameResultElement(data: GameResultData?, modifier: Modifier = Modifi
                 Text("${data.teamScore} - ${data.opponentScore} (T)", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             is GameResultData.Win ->
                 Text("${data.teamScore} - ${data.opponentScore} (W)", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            GameResultData.UnknownResult, null ->
+            is GameResultData.UnknownResult, null ->
                 Text("TBD", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
     }

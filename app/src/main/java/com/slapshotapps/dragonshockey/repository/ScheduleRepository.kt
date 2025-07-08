@@ -73,12 +73,12 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase,
     override fun getGame(gameID: Int) : Flow<ScheduleGameResult> {
         return flow {
             auth.authenticateUserAnonymously()
-            emit(getSingleGameResult(gameID))
+            emit(getSingleGame(gameID))
         }.flowOn(ioDispatcher)
     }
 
-    private suspend fun getSingleGameResult(gameID: Int) = suspendCancellableCoroutine<ScheduleGameResult> { continuation ->
-        database.getReference("games").addValueEventListener( object : ValueEventListener {
+    private suspend fun getSingleGame(gameID: Int) = suspendCancellableCoroutine<ScheduleGameResult> { continuation ->
+        database.getReference(DATABASE_SCHEDULE_KEY).addValueEventListener( object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 dataSnapshot.toList<GameDTO>(gson).takeIf { it.isNotEmpty() }?.firstOrNull{it?.gameID == gameID}?.let { gameDTO ->
                     continuation.takeIf { it.isActive }?.resume(ScheduleGameResult.GameAvailable(toGame(gameDTO)))
@@ -95,7 +95,7 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase,
     }
 
     private fun toSchedule(dtoGames: List<GameDTO?>) = dtoGames.map { gameDto ->
-        gameDto?.let { toGame(it) } ?: Game(0,null, false, "", "", GameResultData.UnknownResult)
+        gameDto?.let { toGame(it) } ?: Game(0,null, false, "", "")
     }.sortedBy { it.gameTime }
 
     private fun toGame(gameDTO: GameDTO) = Game(
@@ -103,26 +103,13 @@ class ScheduleRepositoryImp(private val database: FirebaseDatabase,
             getGameTime(gameDTO.gameTime.orEmpty()),
             gameDTO.home ?: false,
             gameDTO.opponent ?: "Unknown",
-            gameDTO.rink.orEmpty(),
-            toGameData(gameDTO.gameResult ?: GameResultDTO(null, null, null, null))
+            gameDTO.rink.orEmpty()
         )
 
     private fun getGameTime(timeStamp: String) = kotlin.runCatching {
         LocalDateTime.parse(timeStamp, gameTimeFormat)
     }.getOrNull()
 
-    private fun toGameData(result: GameResultDTO) = run {
-        when{
-            (result.teamScore ?: 0) > (result.opponentScore ?: 0) ->
-                GameResultData.Win(result.teamScore ?: 0, result.opponentScore ?: 0)
-            (result.teamScore ?: 0) < (result.opponentScore ?: 0) && result.overtimeLoss == false ->
-                GameResultData.Loss(result.teamScore ?: 0, result.opponentScore ?: 0)
-            (result.teamScore ?: 0) == (result.opponentScore ?: 1) ->
-                GameResultData.Tie(result.teamScore ?: 0, result.opponentScore ?: 0)
-            result.overtimeLoss == true ->
-                GameResultData.OTL(result.teamScore ?: 0, result.opponentScore ?: 0)
-            else -> GameResultData.UnknownResult
-        }
-    }
+
 
 }

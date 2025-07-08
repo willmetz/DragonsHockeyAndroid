@@ -8,11 +8,11 @@ import com.slapshotapps.dragonshockey.models.Game
 import com.slapshotapps.dragonshockey.models.GameResultData
 import com.slapshotapps.dragonshockey.repository.AdminRepository
 import com.slapshotapps.dragonshockey.repository.ScheduleGameResult
-import com.slapshotapps.dragonshockey.repository.ScheduleRepository
+import com.slapshotapps.dragonshockey.usecases.GameUseCaseResult
+import com.slapshotapps.dragonshockey.usecases.SingleGameResultUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +41,7 @@ sealed interface EditGameEvent{
 
 @HiltViewModel
 class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
-                                            private val scheduleRepository: ScheduleRepository,
+                                            private val gameResultUseCase: SingleGameResultUseCase,
                                             private val adminRepository: AdminRepository,
                                             @IoDispatcher private val ioDispatcher: CoroutineDispatcher): ViewModel() {
 
@@ -51,18 +51,16 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
     private val _editGameEventHandler = MutableSharedFlow<EditGameEvent>()
     val editGameEventHandler : SharedFlow<EditGameEvent> = _editGameEventHandler.asSharedFlow()
 
-    private var originalResult : ScheduleGameResult = ScheduleGameResult.GameUnavailable
+    private var originalTeamScore: Int? = null
+    private var originalOpponentScore: Int? = null
+    private var originalIsOTL: Boolean? = null
 
     val gameState : StateFlow<EditGameState> =
-        scheduleRepository.getGame(gameID).map { result ->
-            originalResult = result
+        gameResultUseCase.getSingleGameAndResult(gameID).map { result ->
             when(result){
-                is ScheduleGameResult.GameAvailable -> {
-                    createReadyGameState(result)
-                }
-                ScheduleGameResult.GameUnavailable -> {
-                    EditGameState.OnError("Error Loading Game Info")
-                }
+                is GameUseCaseResult.GameWithResult -> createReadyGameState(result)
+                is GameUseCaseResult.GameWithoutResult -> createReadyGameState(result)
+                GameUseCaseResult.ResultUnknown -> EditGameState.OnError("Error Loading Game Info")
             }
         }.stateIn(viewModelScope, SharingStarted.Lazily, EditGameState.OnLoading)
 
@@ -90,27 +88,37 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
         }
     }
 
-    private fun didGameInfoChange(teamScore: Int, opponentScore: Int, isOTL: Boolean) : Boolean {
-        return when(val original = originalResult){
-            is ScheduleGameResult.GameAvailable -> {
-                teamScore != getTeamScore(original.gameInfo).toIntOrNull() ||
-                        opponentScore != getOpponentScore(original.gameInfo).toIntOrNull() ||
-                         isOTL != isOTL(original.gameInfo)
+    private fun didGameInfoChange(teamScore: Int, opponentScore: Int, isOTL: Boolean) = teamScore != originalTeamScore ||
+            opponentScore != originalOpponentScore || isOTL != originalIsOTL
+
+    private fun createReadyGameState(result: GameUseCaseResult): EditGameState {
+        return when(result){
+            is GameUseCaseResult.GameWithResult -> {
+                originalTeamScore = getTeamScore(result.gameResult).toIntOrNull()
+                originalOpponentScore = getOpponentScore(result.gameResult).toIntOrNull()
+                originalIsOTL = isOTL(result.gameResult)
+                EditGameState.OnGameReady(
+                    result.gameInfo.gameInfo.gameID.toString(),
+                    formatGameDate(result.gameInfo.gameInfo.gameTime),
+                    formatGameTime(result.gameInfo.gameInfo.gameTime),
+                    getTeamScore(result.gameResult),
+                    getOpponentScore(result.gameResult),
+                    result.gameInfo.gameInfo.opponentName,
+                    isOTL(result.gameResult)
+                )
             }
-            ScheduleGameResult.GameUnavailable -> true
+            is GameUseCaseResult.GameWithoutResult -> EditGameState.OnGameReady(
+                result.gameInfo.gameInfo.gameID.toString(),
+                formatGameDate(result.gameInfo.gameInfo.gameTime),
+                formatGameTime(result.gameInfo.gameInfo.gameTime),
+                "",
+                "",
+                result.gameInfo.gameInfo.opponentName,
+                false
+            )
+            GameUseCaseResult.ResultUnknown -> EditGameState.OnError("Error Loading Game Info")
         }
     }
-
-    private fun createReadyGameState(result: ScheduleGameResult.GameAvailable) =
-        EditGameState.OnGameReady(
-            result.gameInfo.gameID.toString(),
-            formatGameDate(result.gameInfo.gameTime),
-            formatGameTime(result.gameInfo.gameTime),
-            getTeamScore(result.gameInfo),
-            getOpponentScore(result.gameInfo),
-            result.gameInfo.opponentName,
-            isOTL(result.gameInfo)
-        )
 
 
     private fun formatGameDate(gameTime: LocalDateTime?) : String{
@@ -121,27 +129,27 @@ class EditGameViewModel @Inject constructor(@GameID private val gameID: Int,
         return kotlin.runCatching { gameTimeFormater.format(gameTime) }.getOrNull() ?: "Unknown Game Time"
     }
 
-    private fun getTeamScore(gameData: Game): String {
-        return when(val gameResult = gameData.result){
+    private fun getTeamScore(gameResult: GameResultData): String {
+        return when(gameResult){
             is GameResultData.Loss -> gameResult.teamScore.toString()
             is GameResultData.OTL -> gameResult.teamScore.toString()
             is GameResultData.Tie -> gameResult.teamScore.toString()
-            GameResultData.UnknownResult -> ""
+            is GameResultData.UnknownResult -> ""
             is GameResultData.Win -> gameResult.teamScore.toString()
         }
     }
 
-    private fun getOpponentScore(gameData: Game): String {
-        return when(val gameResult = gameData.result){
+    private fun getOpponentScore(gameResult: GameResultData): String {
+        return when(gameResult){
             is GameResultData.Loss -> gameResult.opponentScore.toString()
             is GameResultData.OTL -> gameResult.opponentScore.toString()
             is GameResultData.Tie -> gameResult.opponentScore.toString()
-            GameResultData.UnknownResult -> ""
+            is GameResultData.UnknownResult -> ""
             is GameResultData.Win -> gameResult.opponentScore.toString()
         }
     }
 
-    private fun isOTL(gameData: Game) : Boolean {
-        return gameData.result is GameResultData.OTL
+    private fun isOTL(gameResult: GameResultData) : Boolean {
+        return gameResult is GameResultData.OTL
     }
 }
