@@ -1,6 +1,7 @@
 package com.slapshotapps.dragonshockey.schedule
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -84,7 +85,7 @@ private fun LoadingScreen(){
 private fun ScheduleItem(data: ScheduleElement, onEditGame: (Int) -> Unit){
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
         .height(SCHEDULE_ELEMENT_HEIGHT)
-        .combinedClickable(onClick = {}, onLongClick = {onEditGame(data.gameID)})) {
+        .combinedClickable(onClick = {}, onLongClick = {onEditGame(data.gameID)}, indication = null, interactionSource = null)) {
         GameTimeElement(data, Modifier.weight(1f))
         OpponentElement(data, Modifier.weight(1f))
         GameResultElement((data as? ScheduleElement.GameWithResult)?.result, Modifier.weight(1f))

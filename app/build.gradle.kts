@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.slapshotapps.dragonshockey"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.slapshotapps.dragonshockey"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
