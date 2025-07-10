@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.firebase)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serializable)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -77,6 +78,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.db)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.crashlytics)
     implementation(libs.moshi)
     implementation(libs.gson)
     implementation(libs.compose.coil)

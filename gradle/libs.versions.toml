@@ -12,6 +12,7 @@ hiltVersion = "2.51.1"
 firebaseVersion = "4.4.3"
 navigationCompose = "2.9.1"
 hiltNavigationCompose = "1.2.0"
+firebasePluginVersion = "3.0.4"
 
 
 [libraries]
@@ -44,6 +45,7 @@ google-hilt-nav = {group = "androidx.hilt", name="hilt-navigation-compose", vers
 firebase-bom = {group = "com.google.firebase", name="firebase-bom", version = "33.3.0"}
 firebase-db = {group = "com.google.firebase", name="firebase-database"}
 firebase-auth = {group = "com.google.firebase", name="firebase-auth"}
+firebase-crashlytics = {group = "com.google.firebase", name="firebase-crashlytics"}
 
 moshi = {group = "com.squareup.moshi", name = "moshi", version="1.15.1"}
 gson = {group = "com.google.code.gson", name = "gson", version="2.10.1"}
@@ -58,3 +60,4 @@ kotlin-kapt = {id = "org.jetbrains.kotlin.kapt", version ="2.0.20"}
 firebase = {id = "com.google.gms.google-services", version.ref="firebaseVersion"}
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 serializable = {id = "org.jetbrains.kotlin.plugin.serialization", version = "2.0.21"}
+firebase-crashlytics = {id = "com.google.firebase.crashlytics", version.ref="firebasePluginVersion"}
