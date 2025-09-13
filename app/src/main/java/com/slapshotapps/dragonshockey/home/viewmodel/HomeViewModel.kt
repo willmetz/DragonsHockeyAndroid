@@ -96,7 +96,7 @@ class HomeViewModel @Inject constructor(private val scheduleRepository: Schedule
         return kotlin.runCatching {
             DateTimeFormatter.ofPattern("d").format(time).let { dayOfMonth ->
                 getDaySuffix(dayOfMonth.toInt()).let{ suffix ->
-                    DateTimeFormatter.ofPattern("E M d'$suffix' h:mm a").format(time)
+                    DateTimeFormatter.ofPattern("E MMM d'$suffix' h:mm a").format(time)
                 }
             }
         }.getOrNull() ?: "Unknown"
