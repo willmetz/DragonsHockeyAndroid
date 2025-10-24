@@ -11,6 +11,8 @@ import com.slapshotapps.dragonshockey.repository.AuthenticationManager
 import com.slapshotapps.dragonshockey.repository.AuthenticationManagerImp
 import com.slapshotapps.dragonshockey.repository.GameResultRepository
 import com.slapshotapps.dragonshockey.repository.GameResultRepositoryImp
+import com.slapshotapps.dragonshockey.repository.HistoricalStatRepository
+import com.slapshotapps.dragonshockey.repository.HistoricalStatRepositoryImp
 import com.slapshotapps.dragonshockey.repository.RosterRepository
 import com.slapshotapps.dragonshockey.repository.RosterRepositoryImp
 import com.slapshotapps.dragonshockey.repository.ScheduleRepository
@@ -62,4 +64,6 @@ class ApplicationModule {
     @Provides
     fun providesAdminRepo(database: FirebaseDatabase) : AdminRepository = AdminRepositoryImp(database)
 
+    @Provides
+    fun providesHistoricalStatRepo(database: FirebaseDatabase, authenticationManager: AuthenticationManager) : HistoricalStatRepository = HistoricalStatRepositoryImp(database, authenticationManager)
 }

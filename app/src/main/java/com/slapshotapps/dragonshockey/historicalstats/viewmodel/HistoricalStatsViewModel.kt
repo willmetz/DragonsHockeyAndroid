@@ -1,7 +1,12 @@
 package com.slapshotapps.dragonshockey.historicalstats.viewmodel
 
 import androidx.annotation.DrawableRes
-
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.slapshotapps.dragonshockey.repository.HistoricalStatRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 sealed interface HistoricalStatsScreenState{
@@ -21,5 +26,13 @@ sealed interface HistoricalSeasonStats{
                            val assists: String, val points: String, val penaltyMinutes: String) : HistoricalSeasonStats
 }
 
-class HistoricalStatsViewModel {
+@HiltViewModel
+class HistoricalStatsViewModel @Inject constructor(private val repository: HistoricalStatRepository) : ViewModel() {
+
+    fun getData(){
+        viewModelScope.launch {
+            repository.getHistoricalStats("1")
+
+        }
+    }
 }

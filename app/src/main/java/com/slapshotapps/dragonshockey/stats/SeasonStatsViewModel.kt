@@ -17,13 +17,15 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 sealed interface PlayerData{
-    data class ForwardData(val name: String, val position: String, val gamesPlayed: String,
+    val playerId: Int
+    data class ForwardData(
+        override val playerId: Int, val name: String, val position: String, val gamesPlayed: String,
+        val goals: String, val assists: String, val points: String,
+        val penaltyMinutes: String) : PlayerData
+    data class DefenseData(override val playerId: Int, val name: String, val position: String, val gamesPlayed: String,
                            val goals: String, val assists: String, val points: String,
                            val penaltyMinutes: String) : PlayerData
-    data class DefenseData(val name: String, val position: String, val gamesPlayed: String,
-                           val goals: String, val assists: String, val points: String,
-                           val penaltyMinutes: String) : PlayerData
-    data class GoalieData(val name: String, val position: String, val gamesPlayed: String,
+    data class GoalieData(override val playerId: Int, val name: String, val position: String, val gamesPlayed: String,
                           val goalsAgainst: String, val goalsAgainstAverage: String, val shutouts: String,
                           val penaltyMinutes: String) : PlayerData
 }
@@ -102,13 +104,13 @@ class SeasonStatsViewModel @Inject constructor(seasonStatRepository: SeasonStatR
     }
 
 
-    private fun getFowardData(player: Player, stats: LocalStatInfo) = PlayerData.ForwardData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
+    private fun getFowardData(player: Player, stats: LocalStatInfo) = PlayerData.ForwardData(player.playerID, getName(player), getPosition(player), stats.gamesPlayed.toString(),
             stats.goals.toString(), stats.assists.toString(), stats.points().toString(), stats.pim.toString() )
 
-    private fun getDefenseData(player: Player, stats: LocalStatInfo) = PlayerData.DefenseData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
+    private fun getDefenseData(player: Player, stats: LocalStatInfo) = PlayerData.DefenseData(player.playerID, getName(player), getPosition(player), stats.gamesPlayed.toString(),
         stats.goals.toString(), stats.assists.toString(), stats.points().toString(), stats.pim.toString() )
 
-    private fun getGoalieData(player: Player, stats: LocalStatInfo) = PlayerData.GoalieData(getName(player), getPosition(player), stats.gamesPlayed.toString(),
+    private fun getGoalieData(player: Player, stats: LocalStatInfo) = PlayerData.GoalieData(player.playerID, getName(player), getPosition(player), stats.gamesPlayed.toString(),
         stats.goalsAgainst.toString(), getGoalsAgainstAverage(stats), stats.shutouts.toString(), stats.pim.toString() )
 
     private fun getName(player: Player) = "${player.firstName} ${player.lastName}"

@@ -1,6 +1,7 @@
 package com.slapshotapps.dragonshockey.stats
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,14 +29,14 @@ import com.slapshotapps.dragonshockey.utils.measureTextWidth
 import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 
 @Composable
-fun SeasonStatsScreen(viewModel: SeasonStatsViewModel = hiltViewModel<SeasonStatsViewModel>()) {
+fun SeasonStatsScreen(onPlayerSelected: (Int) -> Unit, viewModel: SeasonStatsViewModel = hiltViewModel<SeasonStatsViewModel>()) {
     val data = viewModel.seasonStatsState.collectAsStateWithLifecycle()
 
     when(val info = data.value){
         SeasonStatScreenState.Loading -> LoadingContent()
         is SeasonStatScreenState.OnError -> ErrorContent(info.message)
         SeasonStatScreenState.NoDataAvailable -> NoContent()
-        is SeasonStatScreenState.OnDataReady -> SeasonStatContent(info.data)
+        is SeasonStatScreenState.OnDataReady -> SeasonStatContent(info.data, onPlayerSelected)
     }
 }
 
@@ -70,17 +71,18 @@ private fun ErrorContent(errorMsg: String, modifier: Modifier = Modifier){
 }
 
 @Composable
-private fun SeasonStatContent(playerStats: List<PlayerData>, modifier: Modifier = Modifier){
+private fun SeasonStatContent(playerStats: List<PlayerData>, onPlayerSelected: (Int) -> Unit,
+                              modifier: Modifier = Modifier){
     LazyColumn(modifier.then(Modifier.padding(horizontal = 4.dp))) {
-        items(playerStats) {
-            Card {
-                when(it){
-                    is PlayerData.GoalieData -> GoalieStatCard(it)
-                    is PlayerData.ForwardData -> PlayerStatCard(it)
-                    is PlayerData.DefenseData -> PlayerStatCard(it)
+        items(playerStats) {data ->
+            Card(modifier = Modifier.clickable { onPlayerSelected(data.playerId) }) {
+                when(data){
+                    is PlayerData.GoalieData -> GoalieStatCard(data)
+                    is PlayerData.ForwardData -> PlayerStatCard(data)
+                    is PlayerData.DefenseData -> PlayerStatCard(data)
                 }
             }
-            if(playerStats.indexOf(it) != playerStats.size) Spacer(Modifier.height(4.dp))
+            if(playerStats.indexOf(data) < playerStats.size - 1) Spacer(Modifier.height(4.dp))
         }
     }
 }
@@ -195,13 +197,13 @@ private fun getSafePadding(labelLength: Dp, contentLength: Dp) : Dp {
 @Composable
 @Preview
 private fun ViewGoalieCard(){
-    GoalieStatCard(PlayerData.GoalieData("Chris Osgood", "G", "3",
+    GoalieStatCard(PlayerData.GoalieData(1, "Chris Osgood", "G", "3",
         "4", "1.33", "1", "3"))
 }
 
 @Composable
 @Preview
 private fun ViewPlayerCard(){
-    PlayerStatCard(PlayerData.ForwardData("Wayne Gretzky", "F", "2",
+    PlayerStatCard(PlayerData.ForwardData(1, "Wayne Gretzky", "F", "2",
         "4", "5", "9", "3"))
 }

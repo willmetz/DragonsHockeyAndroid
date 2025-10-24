@@ -26,14 +26,18 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.slapshotapps.dragonshockey.R
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalSeasonStats
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalStatsScreenState
+import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalStatsViewModel
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.PlayerInfo
 
 
 @Composable
-fun HistoricalStatsScreen() {
+fun HistoricalStatsScreen(playerId: Int, viewModel: HistoricalStatsViewModel = hiltViewModel<HistoricalStatsViewModel>(),
+                          modifier: Modifier = Modifier) {
+    viewModel.getData()
 
 }
 

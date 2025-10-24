@@ -43,6 +43,7 @@ import androidx.navigation.toRoute
 import com.slapshotapps.dragonshockey.admin.AuthLandingScreen
 import com.slapshotapps.dragonshockey.admin.editgame.EditGameScreen
 import com.slapshotapps.dragonshockey.admin.editgamestats.EditGameStatsScreen
+import com.slapshotapps.dragonshockey.historicalstats.screen.HistoricalStatsScreen
 import com.slapshotapps.dragonshockey.home.screen.HomeScreen
 import com.slapshotapps.dragonshockey.navigation.TopLevelRoutes
 import com.slapshotapps.dragonshockey.roster.RosterScreen
@@ -77,6 +78,8 @@ sealed class AppScreen(){
     data class AdminEditGame(val gameID: Int): AppScreen()
     @Serializable
     data class AdminEditStats(val gameID: Int): AppScreen()
+    @Serializable
+    data class HistoricalStats(val playerId: Int): AppScreen()
 }
 
 //@Serializable
@@ -107,7 +110,11 @@ class MainActivity : ComponentActivity() {
                         composable<AppScreen.Home> { HomeScreen() }
                         composable<AppScreen.Roster> { RosterScreen() }
                         composable<AppScreen.Schedule> { ScheduleScreen({ gameID -> navController.navigate(AppScreen.AdminLanding(gameID))}) }
-                        composable<AppScreen.Stats> { SeasonStatsScreen() }
+                        composable<AppScreen.Stats> { SeasonStatsScreen({ playerId -> navController.navigate(AppScreen.HistoricalStats(playerId))}) }
+                        composable<AppScreen.HistoricalStats>{
+                            val navEntry = it.toRoute<AppScreen.HistoricalStats>()
+                            HistoricalStatsScreen(navEntry.playerId)
+                        }
                         composable<AppScreen.AdminLanding>{
                             val navEntry = it.toRoute<AppScreen.AdminLanding>()
                             AuthLandingScreen(navEntry.gameID, {gameID ->
