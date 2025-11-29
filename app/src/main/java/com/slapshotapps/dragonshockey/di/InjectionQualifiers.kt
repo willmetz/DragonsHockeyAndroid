@@ -14,3 +14,7 @@ annotation class MainDispatcher
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class GameID
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class PlayerID

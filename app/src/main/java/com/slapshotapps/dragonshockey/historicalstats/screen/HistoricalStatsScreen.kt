@@ -37,7 +37,7 @@ import com.slapshotapps.dragonshockey.historicalstats.viewmodel.PlayerInfo
 @Composable
 fun HistoricalStatsScreen(playerId: Int, viewModel: HistoricalStatsViewModel = hiltViewModel<HistoricalStatsViewModel>(),
                           modifier: Modifier = Modifier) {
-    viewModel.getData()
+    viewModel.getData(playerId)
 
 }
 
