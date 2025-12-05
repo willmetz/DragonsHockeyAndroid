@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -27,18 +28,46 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slapshotapps.dragonshockey.R
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalSeasonStats
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalStatsScreenState
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.HistoricalStatsViewModel
 import com.slapshotapps.dragonshockey.historicalstats.viewmodel.PlayerInfo
+import com.slapshotapps.dragonshockey.widgets.ShimmerBackground
 
 
 @Composable
-fun HistoricalStatsScreen(playerId: Int, viewModel: HistoricalStatsViewModel = hiltViewModel<HistoricalStatsViewModel>(),
+fun HistoricalStatsScreen(viewModel: HistoricalStatsViewModel = hiltViewModel<HistoricalStatsViewModel>(),
                           modifier: Modifier = Modifier) {
-    viewModel.getData(playerId)
+    when(val state = viewModel.historicalStatState.collectAsStateWithLifecycle().value){
+        is HistoricalStatsScreenState.DataReady -> HasStats(state)
+        is HistoricalStatsScreenState.Error -> NoStatsAvailable(state)
+        HistoricalStatsScreenState.Loading -> Loading()
+    }
+}
 
+@Composable
+fun Loading(){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .background(ShimmerBackground())
+                .padding(bottom = 4.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+
+        repeat(7){
+            Box(Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .background(ShimmerBackground())
+                .padding(bottom = 4.dp)
+                .align(Alignment.CenterHorizontally)
+            )
+        }
+    }
 }
 
 @Composable
@@ -153,9 +182,6 @@ private fun GoalieSeasonStatRow(backgroundColor: Color, stats: HistoricalSeasonS
     Row(modifier = Modifier.fillMaxWidth().background(backgroundColor).padding(vertical = 4.dp)){
         Text(stats.season, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(stats.gamesPlayed, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(stats.wins, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(stats.losses, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text(stats.ties, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(stats.goalsAgainstAverage, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(stats.shutouts, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text(stats.penaltyMinutes, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
@@ -188,9 +214,9 @@ private fun GoalieSeasonStatsPreview(){
     Column {
         GoalieStatsHeader()
         GoalieSeasonStatRow(Color.Red, HistoricalSeasonStats.GoalieStats("2025-3",
-            "1", "2", "3", "4", "5", "6", "7"))
+            "1", "2", "3", "4"))
         GoalieSeasonStatRow(Color.White, HistoricalSeasonStats.GoalieStats("2025-4",
-            "1", "2", "3", "4", "5", "6", "7"))
+            "1", "2", "3", "4"))
     }
 }
 
@@ -205,9 +231,9 @@ private fun NoStatsAvailablePreview(){
 private fun HasStatsPreview(){
     val info = PlayerInfo("Chris Osgood", "30", "G", R.drawable.goalie_helment_transparent)
     val stats = listOf(
-        HistoricalSeasonStats.GoalieStats("2025-3", "1", "2", "3", "4", "5", "6", "7"),
-        HistoricalSeasonStats.GoalieStats("2025-4", "12", "5", "3", "4", "5", "6", "7"),
-        HistoricalSeasonStats.GoalieStats("2025-5", "12", "6", "3", "4", "5", "6", "7"))
+        HistoricalSeasonStats.GoalieStats("2025-3", "1", "2", "3", "4"),
+        HistoricalSeasonStats.GoalieStats("2025-4", "12", "5", "3", "4"),
+        HistoricalSeasonStats.GoalieStats("2025-5", "12", "6", "3", "4"))
 
     HasStats(HistoricalStatsScreenState.DataReady(info, stats))
 }

@@ -79,7 +79,7 @@ sealed class AppScreen(){
     @Serializable
     data class AdminEditStats(val gameID: Int): AppScreen()
     @Serializable
-    data class HistoricalStats(val playerId: Int): AppScreen()
+    data class HistoricalStats(val playerID: Int): AppScreen()
 }
 
 //@Serializable
@@ -113,7 +113,8 @@ class MainActivity : ComponentActivity() {
                         composable<AppScreen.Stats> { SeasonStatsScreen({ playerId -> navController.navigate(AppScreen.HistoricalStats(playerId))}) }
                         composable<AppScreen.HistoricalStats>{
                             val navEntry = it.toRoute<AppScreen.HistoricalStats>()
-                            HistoricalStatsScreen(navEntry.playerId)
+                            it.arguments?.putInt("playerID", navEntry.playerID)
+                            HistoricalStatsScreen()
                         }
                         composable<AppScreen.AdminLanding>{
                             val navEntry = it.toRoute<AppScreen.AdminLanding>()
