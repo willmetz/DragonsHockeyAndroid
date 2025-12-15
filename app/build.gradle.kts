@@ -17,8 +17,8 @@ android {
         applicationId = "com.slapshotapps.dragonshockey"
         minSdk = 29
         targetSdk = 35
-        versionCode = 42
-        versionName = "4.1"
+        versionCode = 43
+        versionName = "4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

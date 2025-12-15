@@ -4,24 +4,17 @@ import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slapshotapps.dragonshockey.R
-import com.slapshotapps.dragonshockey.di.GameID
 import com.slapshotapps.dragonshockey.di.PlayerID
 import com.slapshotapps.dragonshockey.models.Player
 import com.slapshotapps.dragonshockey.models.PlayerPosition
 import com.slapshotapps.dragonshockey.repository.CareerStatsModel
-import com.slapshotapps.dragonshockey.repository.HistoricalStatRepository
-import com.slapshotapps.dragonshockey.repository.HistoricalStatResult
-import com.slapshotapps.dragonshockey.roster.RosterScreenState
 import com.slapshotapps.dragonshockey.usecases.HistoricalStatsUseCase
 import com.slapshotapps.dragonshockey.usecases.PlayerHistoricalStatsResult
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
@@ -60,7 +53,7 @@ class HistoricalStatsViewModel @Inject constructor(@PlayerID val playerId: Int,
                         HistoricalStatsScreenState.DataReady(toPlayerInfo(data.playerInfo), getGoalieStats(data.careerStatsModel))
                     }
                     else -> {
-                        HistoricalStatsScreenState.DataReady(toPlayerInfo(data.playerInfo), getGoalieStats(data.careerStatsModel))
+                        HistoricalStatsScreenState.DataReady(toPlayerInfo(data.playerInfo), getPlayerStats(data.careerStatsModel))
                     }
                 }
             }
@@ -68,15 +61,15 @@ class HistoricalStatsViewModel @Inject constructor(@PlayerID val playerId: Int,
         }
     }
 
-    fun toPlayerInfo(player: Player) = PlayerInfo("${player.firstName} ${player.lastName}", player.number, getPosition(player), getPlayerImage(player))
+    private fun toPlayerInfo(player: Player) = PlayerInfo("${player.firstName} ${player.lastName}", player.number, getPosition(player), getPlayerImage(player))
 
-    fun getFirstName(name: String) = name.split(" ").firstOrNull() ?: "Unknown"
-    fun getLastName(name: String) = name.split(" ").getOrNull(1) ?: "Unknown"
+    private fun getGoalieStats(stats: List<CareerStatsModel>): List<HistoricalSeasonStats>{
 
+        var careerGoalsAgainst : Int = 0
 
-    fun getGoalieStats(stats: List<CareerStatsModel>): List<HistoricalSeasonStats>{
-        return stats.filterIsInstance<CareerStatsModel.GoalieCareerStats>()
+        val totalStats :MutableList<HistoricalSeasonStats.GoalieStats>  = stats.filterIsInstance<CareerStatsModel.GoalieCareerStats>()
             .map { goalieStat ->
+                careerGoalsAgainst += goalieStat.goalsAgainst
                 HistoricalSeasonStats.GoalieStats(
                     season = goalieStat.seasonID,
                     gamesPlayed = goalieStat.gamesPlayed.toString(),
@@ -84,7 +77,56 @@ class HistoricalStatsViewModel @Inject constructor(@PlayerID val playerId: Int,
                     shutouts = goalieStat.shutouts.toString(),
                     penaltyMinutes = goalieStat.penaltyMinutes.toString()
                 )
-            }
+            }.sortedByDescending { it.season }.toMutableList()
+
+        totalStats.add(calcGoalieCareerTotals(totalStats, careerGoalsAgainst))
+
+        return totalStats.toList()
+    }
+
+    private fun calcGoalieCareerTotals(stats: List<HistoricalSeasonStats.GoalieStats>, careerGoalsAgainst: Int) : HistoricalSeasonStats.GoalieStats{
+        val totalGamesPlayed = stats.sumOf { it.gamesPlayed.toInt() }
+
+        return HistoricalSeasonStats.GoalieStats(
+            gamesPlayed = totalGamesPlayed.toString(),
+            season = "Career",
+            goalsAgainstAverage = getGoalsAgainstAverage(careerGoalsAgainst, totalGamesPlayed),
+            shutouts = stats.sumOf { it.shutouts.toInt() }.toString(),
+            penaltyMinutes = stats.sumOf { it.penaltyMinutes.toInt() }.toString()
+        )
+    }
+
+    private fun getPlayerStats(stats: List<CareerStatsModel>): List<HistoricalSeasonStats>{
+        val totalStats = stats.filterIsInstance<CareerStatsModel.SkaterCareerStats>()
+            .map { playerStats ->
+                HistoricalSeasonStats.SkaterStats(
+                    season = playerStats.seasonID,
+                    gamesPlayed = playerStats.gamesPlayed.toString(),
+                    penaltyMinutes = playerStats.penaltyMinutes.toString(),
+                    goals = playerStats.goals.toString(),
+                    assists = playerStats.assists.toString(),
+                    points = (playerStats.goals + playerStats.assists).toString()
+                )
+            }.sortedByDescending { it.season }.toMutableList()
+
+        totalStats.add(calcSkaterCareerTotals(totalStats))
+
+        return totalStats.toList()
+    }
+
+    private fun calcSkaterCareerTotals(stats: List<HistoricalSeasonStats.SkaterStats>) : HistoricalSeasonStats.SkaterStats{
+        val totalGamesPlayed = stats.sumOf { it.gamesPlayed.toInt() }
+        val totalGoals = stats.sumOf { it.goals.toInt() }
+        val totalAssists = stats.sumOf { it.assists.toInt() }
+
+        return HistoricalSeasonStats.SkaterStats(
+            gamesPlayed = totalGamesPlayed.toString(),
+            season = "Career",
+            goals = totalGoals.toString(),
+            assists = totalAssists.toString(),
+            points = (totalGoals + totalAssists).toString(),
+            penaltyMinutes = stats.sumOf { it.penaltyMinutes.toInt() }.toString()
+        )
     }
 
     private fun getGoalsAgainstAverage(goalsAgainst: Int, gamesPlayed: Int) : String {

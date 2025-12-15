@@ -75,7 +75,7 @@ fun HasStats(data: HistoricalStatsScreenState.DataReady){
     Column(modifier = Modifier.fillMaxSize()) {
         PlayerHeader(data.playerInfo)
         LazyColumn(Modifier.fillMaxWidth()) {
-            item { if(data.playerInfo.position != "G") SkaterStatsHeader() else GoalieStatsHeader() }
+            stickyHeader { if(data.playerInfo.position != "Goalie") SkaterStatsHeader() else GoalieStatsHeader() }
             items(data.stats.filterIsInstance<HistoricalSeasonStats.SkaterStats>()){
                 SkaterSeasonStatLine(if(data.stats.indexOf(it) % 2 == 0) Color.White else Color.Red, it)
             }
@@ -168,9 +168,6 @@ private fun GoalieStatsHeader() {
     Row(modifier = Modifier.fillMaxWidth().background(Color.Red).padding(vertical = 8.dp)){
         Text("Season", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text("GP", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text("W", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text("L", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        Text("T", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text("GAA", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text("SO", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
         Text("PIM", modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
