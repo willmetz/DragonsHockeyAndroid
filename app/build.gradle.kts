@@ -11,14 +11,14 @@ plugins {
 
 android {
     namespace = "com.slapshotapps.dragonshockey"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.slapshotapps.dragonshockey"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 42
-        versionName = "4.1"
+        targetSdk = 36
+        versionCode = 43
+        versionName = "4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

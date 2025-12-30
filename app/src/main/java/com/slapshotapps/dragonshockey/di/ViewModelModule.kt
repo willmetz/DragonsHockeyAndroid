@@ -18,3 +18,14 @@ object DetailsModule {
         savedStateHandle.get<Int>("gameID")
             ?: throw IllegalArgumentException("You have to provide a gameID when navigating to edit a game")
 }
+
+@Module
+@InstallIn(ViewModelComponent::class)
+object HistoricalStatsModule {
+    @Provides
+    @PlayerID
+    @ViewModelScoped
+    fun providePlayerID(savedStateHandle: SavedStateHandle): Int =
+        savedStateHandle.get<Int>("playerID")
+            ?: throw IllegalArgumentException("You have to provide a playerID when navigating to historical stats")
+}
